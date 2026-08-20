@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 function RightSidebar() {
     // State to hold suggested users fetched from the API
     const [suggestions, setSuggestions] = useState([]);
+    
 
     // Fetch suggestions once when the component mounts
     useEffect(() => {
@@ -52,7 +53,7 @@ function RightSidebar() {
                 ))}
             </div>
 
-            {/* Trending card (static content) */}
+            {/* trending card (static content) */}
             <div className="bg-white rounded-2xl p-4">
                 <h2 className="font-bold text-xl mb-4">Trending</h2>
                 {[

@@ -12,14 +12,15 @@ function TweetCard({ user }) {
     // Simulated tweet content based on user data
     // Using user's first name makes it feel more unique
     const tweetOptions = [
-        `Can't believe it's already ${user.name.first}, still studying 📚`,
+        `Can't believe it's already Monday, still studying urrrgh!`,
         `Coffee run with ${user.name.first} ☕️`,
         `The library is my second home at this point 🏛️`,
         `Shoutout to ${user.name.first} for the study session!`,
         `Campus food hits different after a long day 🍕`,
         `Anyone else excited for the game this weekend? 🏈`,
         `Just turned in my final paper! Freedom! 🎉`,
-        `Why is parking on campus impossible? 🚗😤`,
+        `Why is parking on campus impossible? 😤`,
+        `Late night study vibes with ${user.name.first} `,
     ];
 
     // Pick a tweet based on the user's name so it's different per person
@@ -85,7 +86,9 @@ function TweetCard({ user }) {
                         <button
                             onClick={() => {
                                 setReposted(!reposted);
-                                setReposts(reposted ? reposts - 1 : reposts + 1);
+                                setReposts(
+                                    reposted ? reposts - 1 : reposts + 1,
+                                );
                             }}
                             className={`flex items-center space-x-1 ${reposted ? "text-green-500" : "text-x-gray hover:text-green-500"}`}
                         >
@@ -102,14 +105,15 @@ function TweetCard({ user }) {
                                     d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
                                 />
                             </svg>
-                            <span>{reposted ? reposts + 1 : reposts}</span>
+                            <span>{reposts}</span>
                         </button>
 
                         {/* Like button */}
                         <button
                             onClick={() => {
-                                setLiked(!liked);
-                                setLikes(liked ? likes - 1 : likes + 1);
+                                const newLiked = !liked;
+                                setLiked(newLiked);
+                                setLikes(newLiked ? likes + 1 : likes - 1);
                             }}
                             className={`flex items-center space-x-1 ${liked ? "text-red-500" : "text-x-gray hover:text-red-500"}`}
                         >
