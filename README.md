@@ -1,111 +1,145 @@
 # UniFeed
 
-UniFeed is a campus-only social space inspired by the simplicity of X (formerly Twitter), built exclusively for university students. It gives students a place to share quick thoughts, see what's happening around campus, discover peers, and connect within their own community.
+UniFeed is a campus-first social platform designed for students who want to feel connected without the noise of generic social media.
 
-## Why UniFeed?
+Instead of a world-sized feed full of influencers, politics, and endless scrolling, UniFeed gives students one focused place to:
 
-Most social platforms are too broad. UniFeed narrows the focus to campus life, the conversations, announcements, and moments that matter to students.
+- share campus moments
+- discover people around them
+- find communities and events
+- keep up with what matters in student life
 
-## Features
+Think of it as a social home for university life: a cleaner, friendlier, more relevant version of the social timeline.
 
-- Scroll through a live campus feed
-- Search and explore fellow students
-- View student profiles
-- Like, repost, and comment on posts
-- Clean, minimal, mobile-friendly UI
-- Fast and simple to use
+## The problem UniFeed solves
 
-## API Integration
+Students are already living in communities — class groups, residences, clubs, societies, course chats, and campus events — but those conversations are scattered across different apps, group chats, and random platforms.
 
-### Base URL
+The result:
 
-https://randomuser.me/api/
+- information gets lost in noisy feeds
+- students feel disconnected from their own campus network
+- it is hard to discover people with shared interests or classes
+- campus announcements and social moments are not organized in one place
 
-### Endpoints Used
+UniFeed solves that by creating a dedicated social space for university life, where the focus stays on people, communities, and campus moments.
 
-#### 1. Get Students for Feed
+## Why this exists
 
-Fetches a list of students to populate the feed.
+Social media is built for everyone. Students need something built for them.
 
-GET https://randomuser.me/api/?results=10
+UniFeed is about reducing friction between students and the communities they already belong to. It creates a social layer that feels local, personal, and useful — not overwhelming.
 
-#### 2. Get Students for Explore Page
+## What the product looks like
 
-Fetches a larger set of students for search and discovery.
+The app includes:
 
-GET https://randomuser.me/api/?results=20
+- a personalized campus feed
+- searchable student discovery
+- profile pages
+- message, notifications, bookmarks, and events placeholders
+- community-oriented sections for campus conversations
+- an auth flow for sign in, sign up, and password recovery
 
-#### 3. Get a Specific Student Profile
+## Current project status
 
-Fetches a single student by ID.
+This repository is currently a polished frontend prototype for the experience, with a dark modern UI and a campus-focused social layout.
 
-GET https://randomuser.me/api/?uuid={student-uuid}
+It includes:
 
-### Future Endpoints (When Backend is Added)
+- mock data and realistic campus content
+- explore and profile flows
+- auth views and route structure
+- placeholder API helpers ready for a backend integration
 
-#### Create a New Post
+The app is structured so a real student backend can be plugged in later without rewriting the full user experience.
 
-POST /api/posts
+## Core features
 
-#### Like a Post
+- Campus feed with student activity and community prompts
+- Search by student name, username, and location
+- Student profile pages with social-style layouts
+- Auth screens for login, sign up, and password reset
+- Future pages for notifications, bookmarks, events, and communities
+- Mobile-first responsive design for campus life on the move
 
-POST /api/posts/:id/like
-
-#### Repost a Post
-
-POST /api/posts/:id/repost
-
-#### Add a Comment
-
-POST /api/posts/:id/comments
-
-## Tech Stack
+## Tech stack
 
 - React
+- Vite
 - React Router
 - Tailwind CSS
-- Lucide Icons
-- Random User API (for real external data)
+- Lucide React Icons
+- RandomUser API for demo data
+
+## Project structure
+
+```bash
+src/
+├── App.jsx
+├── main.jsx
+├── index.css
+├── components/
+├── pages/
+├── data/
+├── lib/
+└── ...
+```
 
 ## Setup
 
 ### Prerequisites
 
-- Node.js installed
-- npm or yarn
+- Node.js 18+
+- npm
 
-### Installation
+### Install dependencies
 
-1. Clone the repository:
-
-git clone https://github.com/yourusername/unifeed.git
-
-2. Navigate into the project folder:
-
-cd unifeed
-
-3. Install dependencies:
-
+```bash
 npm install
+```
 
-4. Start the development server:
+### Run locally
 
+```bash
 npm run dev
+```
 
-5. Open your browser and visit:
+Then open the local Vite URL in your browser.
 
-http://localhost:5173
+## Environment variables
 
-## Challenges
+If you connect the app to a real backend, create a `.env` file and add:
 
-- Handling dynamic data from an external API
-- Filtering and searching users in real time
-- Managing state across routes
-- Simulating interactions (likes, reposts) without a backend
+```env
+VITE_API_BASE_URL=http://localhost:5000
+```
 
-## Future Improvements
+The auth service in `src/lib/authApi.js` is already structured to work with that pattern.
 
-- Real authentication using student emails or registration numbers
-- Backend with database for posts, comments, and user profiles
-- Direct messaging between students
-- Campus clubs and events feed
+## Roadmap
+
+### Near term
+
+- connect real authentication
+- add student registration and login backend
+- save and fetch real posts
+- implement comments, likes, and reposts
+
+### Longer term
+
+- campus rooms and communities
+- event discovery and RSVP flow
+- messaging between students
+- admin moderation and safety tools
+- student verification for university-only access
+
+## Why it matters
+
+Campus life is rich, social, and fast-moving. Students deserve a digital space that reflects that energy without turning it into noise.
+
+UniFeed is a step toward building a more intentional, campus-aware social experience — one that helps students connect with the right people, at the right time, in the right place.
+
+## License
+
+This project is currently for educational and prototype use.
