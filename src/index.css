@@ -1,26 +1,76 @@
 @import "tailwindcss";
 
-@import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Rubik+Spray+Paint&display=swap");
-
-
 @theme {
-    --color-x-black: #000000;
-    --color-x-white: #ffffff;
-    --color-x-gray: #71767b;
-    --color-x-lightgray: #e7e9ea;
-    --color-x-blue: #1d9bf0;
-    --color-x-bg: #f7f9f9;
+    --color-x-black: #0b0d10;
+    --color-x-white: #f8fafc;
+    --color-x-gray: #8b95a5;
+    --color-x-lightgray: #28303a;
+    --color-x-blue: #a3e635;
+    --color-x-bg: #0b0d10;
+}
+
+:root {
+    color-scheme: dark;
+    font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+    background: #0b0d10;
+    color: #f8fafc;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+}
+
+* {
+    box-sizing: border-box;
 }
 
 body {
-    background-color: var(--color-x-bg);
-    color: var(--color-x-black);
-    font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-        sans-serif;
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background:
+        radial-gradient(
+            circle at 86% 4%,
+            rgba(163, 230, 53, 0.08),
+            transparent 24rem
+        ),
+        #0b0d10;
+    color: #f8fafc;
 }
-.logo {
-    font-family: "Dancing Script", system-ui;
-    font-weight: 400;
-    font-style: normal;
+
+button,
+a,
+input {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.logo,
+h1,
+h2,
+h3 {
+    font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+    background: rgba(163, 230, 53, 0.35);
+    color: #f8fafc;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .motion-rise {
+        animation: motion-rise 420ms cubic-bezier(0.23, 1, 0.32, 1) both;
+    }
+}
+
+@keyframes motion-rise {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

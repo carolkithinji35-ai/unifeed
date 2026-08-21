@@ -1,22 +1,25 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import {
+    ArrowLeft,
+    CalendarDays,
+    Globe2,
+    Mail,
+    MapPin,
+    Phone,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 function Profile() {
-    // Get the user ID from the URL parameter
     const { id } = useParams();
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
 
-    // Load user data when component mounts or ID changes
     useEffect(() => {
-        // First, try to get the user from sessionStorage (saved by Feed/Explore)
         const users = JSON.parse(sessionStorage.getItem("users") || "[]");
         const foundUser = users.find((u) => u.login.uuid === id);
-
         if (foundUser) {
-            setUser(foundUser);
+            queueMicrotask(() => setUser(foundUser));
         } else {
-            // Fallback: fetch a specific user using the ID as a seed
             const fetchUser = async () => {
                 try {
                     const response = await fetch(
@@ -32,72 +35,106 @@ function Profile() {
         }
     }, [id]);
 
-    // Loading state
-    if (!user) {
-        return <div className="text-center py-12">Loading...</div>;
-    }
+    if (!user)
+        return (
+            <div className="grid min-h-[60vh] place-items-center text-sm text-slate-500">
+                Loading profile...
+            </div>
+        );
 
     return (
-        <div className="min-h-screen">
-            {/* Cover photo placeholder */}
-            <div className="h-32 bg-gray-200"></div>
+        <div className="motion-rise overflow-hidden rounded-3xl border border-white/8 bg-white/[0.035]">
+            <div className="relative h-36 bg-[radial-gradient(circle_at_20%_20%,rgba(163,230,53,0.5),transparent_30%),linear-gradient(120deg,#17212a,#29331d_55%,#10151b)] sm:h-48">
+                <button
+                    onClick={() => navigate(-1)}
+                    type="button"
+                    className="absolute left-4 top-4 grid size-9 place-items-center rounded-xl border border-white/15 bg-black/20 text-white backdrop-blur transition hover:bg-black/40"
+                    aria-label="Go back"
+                >
+                    <ArrowLeft className="size-4" />
+                </button>
+                <div className="absolute bottom-0 left-5 translate-y-1/2">
+                    <img
+                        src={user.picture.large}
+                        alt={user.name.first}
+                        className="size-24 rounded-3xl border-4 border-[#0b0d10] object-cover shadow-xl sm:size-28"
+                    />
+                </div>
+            </div>
 
-            {/* Profile header */}
-            <div className="px-4">
-                <div className="flex justify-between items-start">
-                    <div className="-mt-12">
-                        <img
-                            src={user.picture.large}
-                            alt={user.name.first}
-                            className="w-24 h-24 rounded-full border-4 border-white object-cover"
-                        />
+            <div className="px-5 pb-6 pt-16 sm:px-7 sm:pt-20">
+                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+                    <div>
+                        <h1 className="text-2xl font-semibold text-white">
+                            {user.name.first} {user.name.last}
+                        </h1>
+                        <p className="mt-1 text-sm text-slate-500">
+                            @{user.login.username}
+                        </p>
                     </div>
-                    <button className="bg-black text-white rounded-full px-4 py-2 font-bold mt-2">
-                        Edit profile
+                    <button
+                        type="button"
+                        className="rounded-xl bg-lime-300 px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-lime-200 active:scale-[0.98]"
+                    >
+                        Follow
                     </button>
                 </div>
-
-                {/* User info */}
-                <div className="mt-3">
-                    <h1 className="font-bold text-xl">
-                        {user.name.first} {user.name.last}
-                    </h1>
-                    <p className="text-x-gray">@{user.login.username}</p>
-                    <p className="mt-2">
-                        📍 {user.location.city}, {user.location.country}
-                    </p>
-                    <p className="text-x-gray">📧 {user.email}</p>
-                    <p className="text-x-gray">📱 {user.phone}</p>
+                <p className="mt-5 max-w-xl text-sm leading-6 text-slate-400">
+                    Student, creative thinker, and part of the UniFeed
+                    community. Sharing the little moments that make campus life
+                    memorable.
+                </p>
+                <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
+                    <span className="flex items-center gap-1.5">
+                        <MapPin className="size-3.5" /> {user.location.city},{" "}
+                        {user.location.country}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <Mail className="size-3.5" /> {user.email}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <Phone className="size-3.5" /> {user.phone}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <CalendarDays className="size-3.5" /> Joined recently
+                    </span>
                 </div>
-
-                {/* Follow counts (static) */}
-                <div className="flex space-x-6 mt-3 text-sm">
+                <div className="mt-6 flex gap-6 text-sm">
                     <span>
-                        <strong>128</strong>{" "}
-                        <span className="text-x-gray">Following</span>
+                        <strong className="text-white">128</strong>{" "}
+                        <span className="text-slate-500">Following</span>
                     </span>
                     <span>
-                        <strong>1.2k</strong>{" "}
-                        <span className="text-x-gray">Followers</span>
+                        <strong className="text-white">1.2k</strong>{" "}
+                        <span className="text-slate-500">Followers</span>
                     </span>
                 </div>
             </div>
 
-            {/* Tabs (non-functional, just UI) */}
-            <div className="border-b border-x-lightgray mt-4">
-                <nav className="flex">
-                    <button className="flex-1 py-3 font-bold border-b-2 border-black">
-                        Posts
-                    </button>
-                    <button className="flex-1 py-3 text-x-gray">Replies</button>
-                    <button className="flex-1 py-3 text-x-gray">Media</button>
-                    <button className="flex-1 py-3 text-x-gray">Likes</button>
+            <div className="border-t border-white/8 px-5 sm:px-7">
+                <nav
+                    className="flex gap-6 overflow-auto"
+                    aria-label="Profile tabs"
+                >
+                    {["Posts", "Replies", "Media", "Likes"].map(
+                        (tab, index) => (
+                            <button
+                                key={tab}
+                                type="button"
+                                className={`whitespace-nowrap border-b-2 py-4 text-sm font-semibold ${index === 0 ? "border-lime-300 text-white" : "border-transparent text-slate-600 hover:text-slate-300"}`}
+                            >
+                                {tab}
+                            </button>
+                        ),
+                    )}
                 </nav>
             </div>
-
-            {/* Placeholder for posts */}
-            <div className="p-4 text-center text-x-gray">
-                No posts yet (this is where tweets from this user would appear)
+            <div className="grid place-items-center border-t border-white/8 px-5 py-20 text-center text-sm text-slate-500">
+                <div className="mb-3 grid size-12 place-items-center rounded-2xl bg-white/5 text-slate-600">
+                    <Globe2 className="size-5" />
+                </div>
+                No posts yet — this is where {user.name.first}’s posts will
+                appear.
             </div>
         </div>
     );
