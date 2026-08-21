@@ -2,7 +2,6 @@ import { ChevronDown, Filter, Search, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import CampusPostCard from "../components/CampusPostCard";
 import PostComposer from "../components/PostComposer";
-import TweetCard from "../components/TweetCard";
 import { campusPosts } from "../data/campusContent";
 
 function Feed() {
@@ -108,9 +107,6 @@ function Feed() {
                             post={post}
                             index={index}
                         />
-                    ))}
-                    {filteredUsers.map((user) => (
-                        <TweetCard key={user.login.uuid} user={user} />
                     ))}
                     {campusPosts.slice(2).map((post, index) => (
                         <CampusPostCard
