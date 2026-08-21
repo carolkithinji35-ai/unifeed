@@ -18,8 +18,8 @@ UniFeed brings that energy into one focused space so students can:
 
 ## Preview
 <img width="1892" height="850" alt="unifeed preview" src="https://github.com/user-attachments/assets/db9b4a70-5577-4d23-9cb9-37be511eb9d1" />
-## Live demo
 
+## Live demo
 https://unifeed-seven.vercel.app/
 
 ## What the app includes
