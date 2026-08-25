@@ -23,3 +23,25 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Flask local instance files
+instance/
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
