@@ -16,12 +16,6 @@ UniFeed brings that energy into one focused space so students can:
 - view student profiles and activity
 - stay in touch with what is happening around them
 
-## Preview
-<img width="1892" height="850" alt="unifeed preview" src="https://github.com/user-attachments/assets/db9b4a70-5577-4d23-9cb9-37be511eb9d1" />
-
-## Live demo
-https://unifeed-seven.vercel.app/
-
 ## What the app includes
 
 - campus-style feed with community prompts
@@ -40,7 +34,18 @@ https://unifeed-seven.vercel.app/
 - Lucide React Icons
 - RandomUser API for demo data
 
+## Live demo
 
+https://unifeed-seven.vercel.app/
+```
+
+## Screenshot
+
+Add a screenshot or preview image here:
+
+```text
+assets/uni-feed-preview.png
+```
 
 ## Run locally
 
@@ -105,5 +110,4 @@ src/
 ## License
 
 This project is currently a frontend prototype and is intended for educational and portfolio use.
-
 
