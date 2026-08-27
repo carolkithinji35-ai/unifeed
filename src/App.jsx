@@ -1,19 +1,34 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Layout from "./components/Layout";
-import FuturePage from "./components/FuturePage";
+import { useEffect } from "react";
+import {
+    BrowserRouter as Router,
+    Route,
+    Routes,
+    useLocation,
+} from "react-router-dom";
+import ForgotPassword from "./pages/ForgotPassword";
 import Explore from "./pages/Explore";
 import Feed from "./pages/Feed";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
-import ForgotPassword from "./pages/ForgotPassword";
-import Settings from "./pages/Settings";
+import FuturePage from "./components/FuturePage";
+import Layout from "./components/Layout";
 
-// App is the root component. It wraps everything in a Router and defines routes.
+function ScrollToTop() {
+    const { pathname } = useLocation();
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [pathname]);
+
+    return null;
+}
+
 function App() {
     return (
         <Router>
-            {/* Layout provides the sidebar and right sidebar around all pages */}
+            <ScrollToTop />
             <Layout>
                 <Routes>
                     <Route path="/" element={<Feed />} />

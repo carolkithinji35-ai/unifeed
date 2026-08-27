@@ -48,5 +48,11 @@ def post_to_dict(post):
         "content": post.content,
         "image_url": post.image_url,
         "author_id": post.author_id,
+        "author": {
+            "username": post.author.username,
+        }
+        if post.author
+        else None,
+        "comment_count": len(post.comments),
         "created_at": post.created_at.isoformat(),
     }

@@ -14,14 +14,13 @@ function CampusPostCard({ post, index }) {
     const [bookmarked, setBookmarked] = useState(() => {
         return localStorage.getItem(`unifeed-bookmark-${post.id}`) === "true";
     });
-
     const [comments, setComments] = useState([]);
+    const [commentCount, setCommentCount] = useState(post.comment_count ?? 0);
     const [commentsOpen, setCommentsOpen] = useState(false);
     const [commentText, setCommentText] = useState("");
     const [commentsLoading, setCommentsLoading] = useState(false);
     const [commentSubmitting, setCommentSubmitting] = useState(false);
     const [commentError, setCommentError] = useState("");
-
 
     const toggleBookmark = () => {
         const nextBookmarked = !bookmarked;
@@ -33,11 +32,11 @@ function CampusPostCard({ post, index }) {
         );
     };
 
-
     const loadComments = async () => {
-        setCommentsOpen((isOpen) => !isOpen);
+        const nextOpenState = !commentsOpen;
+        setCommentsOpen(nextOpenState);
 
-        if (commentsOpen || comments.length > 0) return;
+        if (!nextOpenState || comments.length > 0) return;
 
         setCommentsLoading(true);
         setCommentError("");
@@ -51,6 +50,7 @@ function CampusPostCard({ post, index }) {
             }
 
             setComments(data);
+            setCommentCount(data.length);
         } catch (error) {
             console.error("Error loading comments:", error);
             setCommentError("Comments could not be loaded.");
@@ -86,6 +86,7 @@ function CampusPostCard({ post, index }) {
             }
 
             setComments((currentComments) => [...currentComments, data]);
+            setCommentCount((currentCount) => currentCount + 1);
             setCommentText("");
             setCommentsOpen(true);
         } catch (error) {
@@ -100,23 +101,26 @@ function CampusPostCard({ post, index }) {
         <article className="rounded-3xl border border-lime-300/10 bg-[linear-gradient(135deg,rgba(163,230,53,0.06),rgba(255,255,255,0.035)_44%)] p-5 transition hover:border-lime-300/25 hover:bg-white/[0.055] sm:p-6">
             <div className="flex items-start gap-4">
                 <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-lime-300 text-sm font-bold text-slate-950">
-                    U
+                    {post.author?.username?.charAt(0).toUpperCase() || "U"}
                 </div>
+
                 <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
                         <div>
                             <div className="flex flex-wrap items-center gap-2">
                                 <span className="text-sm font-semibold text-white">
-                                    UniFeed Campus Desk
+                                    {post.author?.username ??
+                                        "UniFeed Campus Desk"}
                                 </span>
                                 <span className="rounded-full bg-lime-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-lime-300">
-                                    {post.eyebrow}
+                                    {post.eyebrow || "Campus post"}
                                 </span>
                             </div>
                             <p className="mt-1 text-xs text-slate-600">
                                 Community post · {index + 1}h ago
                             </p>
                         </div>
+
                         <button
                             type="button"
                             onClick={toggleBookmark}
@@ -143,7 +147,7 @@ function CampusPostCard({ post, index }) {
                         {post.text}
                     </p>
 
-                    {post.tags.length > 0 && (
+                    {post.tags?.length > 0 && (
                         <div className="mt-4 flex flex-wrap gap-2">
                             {post.tags.map((tag) => (
                                 <span
@@ -160,12 +164,20 @@ function CampusPostCard({ post, index }) {
                         <button
                             type="button"
                             onClick={loadComments}
-                            className={`flex items-center gap-2 transition ${commentsOpen ? "text-sky-300" : "hover:text-sky-300"}`}
+                            className={`flex items-center gap-2 transition ${
+                                commentsOpen
+                                    ? "text-sky-300"
+                                    : "hover:text-sky-300"
+                            }`}
                             aria-label="Comment on campus post"
                         >
                             <MessageCircle className="size-4" />
-                            <span>{comments.length || "Comment"}</span>
+                            <span>
+                                {commentCount}{" "}
+                                {commentCount === 1 ? "comment" : "comments"}
+                            </span>
                         </button>
+
                         <button
                             type="button"
                             className="flex items-center gap-2 transition hover:text-lime-300"
@@ -174,6 +186,7 @@ function CampusPostCard({ post, index }) {
                             <Repeat2 className="size-4" />
                             <span>{12 + index}</span>
                         </button>
+
                         <button
                             type="button"
                             onClick={() => {
@@ -183,7 +196,9 @@ function CampusPostCard({ post, index }) {
                                     next ? currentLikes + 1 : currentLikes - 1,
                                 );
                             }}
-                            className={`flex items-center gap-2 transition ${liked ? "text-rose-400" : "hover:text-rose-400"}`}
+                            className={`flex items-center gap-2 transition ${
+                                liked ? "text-rose-400" : "hover:text-rose-400"
+                            }`}
                             aria-label="Like campus post"
                         >
                             <Heart
@@ -192,6 +207,7 @@ function CampusPostCard({ post, index }) {
                             />
                             <span>{likes}</span>
                         </button>
+
                         <button
                             type="button"
                             className="ml-auto transition hover:text-sky-300"
@@ -229,6 +245,13 @@ function CampusPostCard({ post, index }) {
                                         key={comment.id}
                                         className="rounded-xl bg-white/[0.035] px-3 py-2 text-sm text-slate-300"
                                     >
+                                        <span className="font-semibold text-lime-300">
+                                            {comment.author?.username ||
+                                                "Student"}
+                                        </span>
+                                        <span className="text-slate-500">
+                                            :{" "}
+                                        </span>
                                         {comment.content}
                                     </div>
                                 ))}
@@ -244,7 +267,7 @@ function CampusPostCard({ post, index }) {
                                         setCommentText(event.target.value)
                                     }
                                     placeholder="Write a comment..."
-                                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/4 px-3 py-2 text-xs text-white outline-none placeholder:text-slate-600 focus:border-lime-300/40"
+                                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white outline-none placeholder:text-slate-600 focus:border-lime-300/40"
                                 />
                                 <button
                                     type="submit"
