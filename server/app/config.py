@@ -32,5 +32,9 @@ def get_database_url():
 class Config:
     """Application settings loaded from environment variables."""
 
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-change-this-secret-key")
     SQLALCHEMY_DATABASE_URI = get_database_url()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "0") == "1"
