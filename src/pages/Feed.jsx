@@ -2,39 +2,62 @@ import { ChevronDown, Filter, Search, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import CampusPostCard from "../components/CampusPostCard";
 import PostComposer from "../components/PostComposer";
-import { campusPosts } from "../data/campusContent";
+
 
 function Feed() {
-    const [users, setUsers] = useState([]);
+    const [posts, setPosts] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
     useEffect(() => {
-        const fetchUsers = async () => {
+        const fetchPosts = async () => {
             setLoading(true);
+            setError("");
             try {
                 const response = await fetch(
-                    "https://randomuser.me/api/?results=10",
+                    "/api/posts"
                 );
+                if (!response.ok) {
+                    throw new Error("Unable to load posts");
+                }
                 const data = await response.json();
-                setUsers(data.results);
-                sessionStorage.setItem("users", JSON.stringify(data.results));
-            } catch (error) {
-                console.error("Error fetching users:", error);
+                const formattedPosts = data.map((post) => (
+                    {
+                        ...post,
+                        text: post.content,
+                        eyebrow: "Campus post",
+                        tags :[]
+                    }
+                ))
+
+                setPosts(formattedPosts);
+                
+            } catch (requestError) {
+                console.error("Error fetching posts:", requestError);
+                setError("We could not load the campus feed. Please try again.");
             } finally {
                 setLoading(false);
             }
         };
-        fetchUsers();
+        fetchPosts();
     }, []);
 
-    const filteredUsers = users.filter((user) => {
-        const fullName = `${user.name.first} ${user.name.last}`.toLowerCase();
-        const username = user.login.username.toLowerCase();
+    const filteredPosts = posts.filter((post) => {
         const query = searchTerm.toLowerCase();
-        return fullName.includes(query) || username.includes(query);
+        return post.content.toLowerCase().includes(query);
     });
 
+    const handlePostCreated = (createdPost) => {
+        const formattedPost = {
+            ...createdPost,
+            text: createdPost.content,
+            eyebrow: "Campus post",
+            tags: [],
+        };
+
+        setPosts((currentPosts) => [formattedPost, ...currentPosts]);
+    };
     return (
         <div className="motion-rise space-y-5">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -62,13 +85,13 @@ function Feed() {
                 <Search className="size-4 text-slate-500" />
                 <input
                     type="text"
-                    placeholder="Search people or usernames..."
+                    placeholder="Search campus posts..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-600"
                 />
                 <span className="hidden text-xs text-slate-600 sm:block">
-                    {filteredUsers.length} people
+                    {filteredPosts.length} posts
                 </span>
             </div>
 
@@ -90,35 +113,40 @@ function Feed() {
                 </span>
             </div>
 
-            <PostComposer />
+            <PostComposer onPostCreated={handlePostCreated} />
 
-            {loading ? (
+            {loading && (
                 <div className="grid place-items-center rounded-3xl border border-white/8 bg-white/[0.02] py-20 text-center">
                     <div className="size-8 animate-spin rounded-full border-2 border-lime-300 border-t-transparent" />
                     <p className="mt-3 text-sm text-slate-500">
                         Loading your feed...
                     </p>
                 </div>
-            ) : filteredUsers.length > 0 ? (
+            )}
+
+            {!loading && error && (
+                <div className="rounded-3xl border border-rose-400/20 bg-rose-400/5 py-20 text-center text-sm text-rose-300">
+                    {error}
+                </div>
+            )}
+
+            {!loading && !error && filteredPosts.length > 0 && (
                 <div className="space-y-4">
-                    {campusPosts.slice(0, 2).map((post, index) => (
+                    {filteredPosts.map((post, index) => (
                         <CampusPostCard
-                            key={post.text}
+                            key={post.id}
                             post={post}
                             index={index}
                         />
                     ))}
-                    {campusPosts.slice(2).map((post, index) => (
-                        <CampusPostCard
-                            key={post.text}
-                            post={post}
-                            index={index + 2}
-                        />
-                    ))}
                 </div>
-            ) : (
+            )}
+
+            {!loading && !error && filteredPosts.length === 0 && (
                 <div className="rounded-3xl border border-white/8 bg-white/[0.02] py-20 text-center text-sm text-slate-500">
-                    No users found matching “{searchTerm}”
+                    {searchTerm
+                        ? `No posts found matching “${searchTerm}”`
+                        : "No posts yet. Be the first to start the conversation."}
                 </div>
             )}
         </div>
