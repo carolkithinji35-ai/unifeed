@@ -12,9 +12,9 @@ UniFeed brings campus conversations into one focused space where students can di
 
 ## preview
 
-```text
+
 ![UniFeed application preview](assets/uni-feed-preview.png)
-``` 
+ 
 
 ## Current features
 
