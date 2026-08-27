@@ -16,6 +16,31 @@ def validate_post_data(data):
     return None
 
 
+def validate_post_update_data(data):
+    """Validate fields supplied when updating a post."""
+    if not isinstance(data, dict):
+        return {"error": "Request body must be a JSON object."}
+
+    if not data:
+        return {"error": "At least one field is required for an update."}
+
+    allowed_fields = {"content", "image_url"}
+    unknown_fields = set(data) - allowed_fields
+
+    if unknown_fields:
+        return {"error": "Only content and image_url can be updated."}
+
+    if "content" in data:
+        if not isinstance(data["content"], str) or not data["content"].strip():
+            return {"error": "Content must be a non-empty string."}
+
+    if "image_url" in data:
+        if data["image_url"] is not None and not isinstance(data["image_url"], str):
+            return {"error": "image_url must be a string or null."}
+
+    return None
+
+
 def post_to_dict(post):
     """Convert a Post model instance into a JSON-friendly dictionary."""
     return {

@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 
 from app.extensions import db
 from app.models import Post, User
-from app.schemas.post_schema import post_to_dict, validate_post_data
+from app.schemas.post_schema import post_to_dict, validate_post_data, validate_post_update_data
 
 
 posts_bp = Blueprint("posts", __name__)
@@ -55,3 +55,42 @@ def create_post():
     db.session.commit()
 
     return jsonify(post_to_dict(post)), 201
+
+
+@posts_bp.patch("/posts/<int:post_id>")
+def update_post(post_id):
+    """Update the content or image URL of an existing post."""
+    post = db.session.get(Post, post_id)
+
+    if post is None:
+        return jsonify({"error": "Post not found."}), 404
+
+    data = request.get_json(silent=True)
+    validation_error = validate_post_update_data(data)
+
+    if validation_error:
+        return jsonify(validation_error), 400
+
+    if "content" in data:
+        post.content = data["content"].strip()
+
+    if "image_url" in data:
+        post.image_url = data["image_url"]
+
+    db.session.commit()
+
+    return jsonify(post_to_dict(post)), 200
+
+
+@posts_bp.delete("/posts/<int:post_id>")
+def delete_post(post_id):
+    """Delete an existing post and its comments."""
+    post = db.session.get(Post, post_id)
+
+    if post is None:
+        return jsonify({"error": "Post not found."}), 404
+
+    db.session.delete(post)
+    db.session.commit()
+
+    return jsonify({"message": "Post deleted successfully."}), 200
