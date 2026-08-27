@@ -17,6 +17,11 @@ def comment_to_dict(comment):
         "id": comment.id,
         "content": comment.content,
         "author_id": comment.author_id,
+        "author": {
+            "username": comment.author.username,
+        }
+        if comment.author
+        else None,
         "post_id": comment.post_id,
         "created_at": comment.created_at.isoformat(),
     }
