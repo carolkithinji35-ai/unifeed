@@ -1,19 +1,262 @@
-import { Bookmark, Heart, MessageCircle, Repeat2, Share2 } from "lucide-react";
+import {
+    Bookmark,
+    Heart,
+    MessageCircle,
+    Repeat2,
+    Send,
+    Share2,
+} from "lucide-react";
 import { useState } from "react";
 
 function CampusPostCard({ post, index }) {
     const [liked, setLiked] = useState(false);
     const [likes, setLikes] = useState(64 + index * 13);
+    const [bookmarked, setBookmarked] = useState(() => {
+        return localStorage.getItem(`unifeed-bookmark-${post.id}`) === "true";
+    });
+
+    const [comments, setComments] = useState([]);
+    const [commentsOpen, setCommentsOpen] = useState(false);
+    const [commentText, setCommentText] = useState("");
+    const [commentsLoading, setCommentsLoading] = useState(false);
+    const [commentSubmitting, setCommentSubmitting] = useState(false);
+    const [commentError, setCommentError] = useState("");
+
+
+    const toggleBookmark = () => {
+        const nextBookmarked = !bookmarked;
+
+        setBookmarked(nextBookmarked);
+        localStorage.setItem(
+            `unifeed-bookmark-${post.id}`,
+            String(nextBookmarked),
+        );
+    };
+
+
+    const loadComments = async () => {
+        setCommentsOpen((isOpen) => !isOpen);
+
+        if (commentsOpen || comments.length > 0) return;
+
+        setCommentsLoading(true);
+        setCommentError("");
+
+        try {
+            const response = await fetch(`/api/posts/${post.id}/comments`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Unable to load comments.");
+            }
+
+            setComments(data);
+        } catch (error) {
+            console.error("Error loading comments:", error);
+            setCommentError("Comments could not be loaded.");
+        } finally {
+            setCommentsLoading(false);
+        }
+    };
+
+    const submitComment = async (event) => {
+        event.preventDefault();
+
+        if (!commentText.trim()) return;
+
+        setCommentSubmitting(true);
+        setCommentError("");
+
+        try {
+            const response = await fetch(`/api/posts/${post.id}/comments`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    content: commentText.trim(),
+                    author_id: 1,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Unable to create comment.");
+            }
+
+            setComments((currentComments) => [...currentComments, data]);
+            setCommentText("");
+            setCommentsOpen(true);
+        } catch (error) {
+            console.error("Error creating comment:", error);
+            setCommentError(error.message);
+        } finally {
+            setCommentSubmitting(false);
+        }
+    };
 
     return (
         <article className="rounded-3xl border border-lime-300/10 bg-[linear-gradient(135deg,rgba(163,230,53,0.06),rgba(255,255,255,0.035)_44%)] p-5 transition hover:border-lime-300/25 hover:bg-white/[0.055] sm:p-6">
             <div className="flex items-start gap-4">
-                <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-lime-300 text-sm font-bold text-slate-950">U</div>
+                <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-lime-300 text-sm font-bold text-slate-950">
+                    U
+                </div>
                 <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-3"><div><div className="flex flex-wrap items-center gap-2"><span className="text-sm font-semibold text-white">UniFeed Campus Desk</span><span className="rounded-full bg-lime-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-lime-300">{post.eyebrow}</span></div><p className="mt-1 text-xs text-slate-600">Community prompt · {index + 1}h ago</p></div><button type="button" className="rounded-lg p-1 text-slate-600 transition hover:bg-white/8 hover:text-white" aria-label="Save campus post"><Bookmark className="size-4" /></button></div>
-                    <p className="mt-4 text-[15px] leading-7 text-slate-200">{post.text}</p>
-                    <div className="mt-4 flex flex-wrap gap-2">{post.tags.map((tag) => <span key={tag} className="rounded-full bg-white/6 px-2.5 py-1 text-[11px] font-medium text-slate-500">{tag}</span>)}</div>
-                    <div className="mt-5 flex items-center justify-between border-t border-white/8 pt-4 text-xs text-slate-500 sm:justify-start sm:gap-7"><button type="button" className="flex items-center gap-2 transition hover:text-sky-300" aria-label="Comment on campus post"><MessageCircle className="size-4" /><span>{8 + index}</span></button><button type="button" className="flex items-center gap-2 transition hover:text-lime-300" aria-label="Repost campus post"><Repeat2 className="size-4" /><span>{12 + index}</span></button><button type="button" onClick={() => { const next = !liked; setLiked(next); setLikes(next ? likes + 1 : likes - 1); }} className={`flex items-center gap-2 transition ${liked ? "text-rose-400" : "hover:text-rose-400"}`} aria-label="Like campus post"><Heart className="size-4" fill={liked ? "currentColor" : "none"} /><span>{likes}</span></button><button type="button" className="ml-auto transition hover:text-sky-300" aria-label="Share campus post"><Share2 className="size-4" /></button></div>
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-sm font-semibold text-white">
+                                    UniFeed Campus Desk
+                                </span>
+                                <span className="rounded-full bg-lime-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-lime-300">
+                                    {post.eyebrow}
+                                </span>
+                            </div>
+                            <p className="mt-1 text-xs text-slate-600">
+                                Community post · {index + 1}h ago
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={toggleBookmark}
+                            className={`rounded-lg p-1 transition hover:bg-white/8 ${
+                                bookmarked
+                                    ? "text-lime-300"
+                                    : "text-slate-600 hover:text-white"
+                            }`}
+                            aria-label={
+                                bookmarked
+                                    ? "Remove bookmark"
+                                    : "Save campus post"
+                            }
+                            title={bookmarked ? "Remove bookmark" : "Save post"}
+                        >
+                            <Bookmark
+                                className="size-4"
+                                fill={bookmarked ? "currentColor" : "none"}
+                            />
+                        </button>
+                    </div>
+
+                    <p className="mt-4 text-[15px] leading-7 text-slate-200">
+                        {post.text}
+                    </p>
+
+                    {post.tags.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            {post.tags.map((tag) => (
+                                <span
+                                    key={tag}
+                                    className="rounded-full bg-white/6 px-2.5 py-1 text-[11px] font-medium text-slate-500"
+                                >
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="mt-5 flex items-center justify-between border-t border-white/8 pt-4 text-xs text-slate-500 sm:justify-start sm:gap-7">
+                        <button
+                            type="button"
+                            onClick={loadComments}
+                            className={`flex items-center gap-2 transition ${commentsOpen ? "text-sky-300" : "hover:text-sky-300"}`}
+                            aria-label="Comment on campus post"
+                        >
+                            <MessageCircle className="size-4" />
+                            <span>{comments.length || "Comment"}</span>
+                        </button>
+                        <button
+                            type="button"
+                            className="flex items-center gap-2 transition hover:text-lime-300"
+                            aria-label="Repost campus post"
+                        >
+                            <Repeat2 className="size-4" />
+                            <span>{12 + index}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const next = !liked;
+                                setLiked(next);
+                                setLikes((currentLikes) =>
+                                    next ? currentLikes + 1 : currentLikes - 1,
+                                );
+                            }}
+                            className={`flex items-center gap-2 transition ${liked ? "text-rose-400" : "hover:text-rose-400"}`}
+                            aria-label="Like campus post"
+                        >
+                            <Heart
+                                className="size-4"
+                                fill={liked ? "currentColor" : "none"}
+                            />
+                            <span>{likes}</span>
+                        </button>
+                        <button
+                            type="button"
+                            className="ml-auto transition hover:text-sky-300"
+                            aria-label="Share campus post"
+                        >
+                            <Share2 className="size-4" />
+                        </button>
+                    </div>
+
+                    {commentsOpen && (
+                        <div className="mt-4 border-t border-white/8 pt-4">
+                            {commentsLoading && (
+                                <p className="text-xs text-slate-500">
+                                    Loading comments...
+                                </p>
+                            )}
+
+                            {commentError && (
+                                <p className="mb-3 text-xs text-rose-300">
+                                    {commentError}
+                                </p>
+                            )}
+
+                            {!commentsLoading &&
+                                comments.length === 0 &&
+                                !commentError && (
+                                    <p className="mb-3 text-xs text-slate-600">
+                                        No comments yet. Start the conversation.
+                                    </p>
+                                )}
+
+                            <div className="space-y-2">
+                                {comments.map((comment) => (
+                                    <div
+                                        key={comment.id}
+                                        className="rounded-xl bg-white/[0.035] px-3 py-2 text-sm text-slate-300"
+                                    >
+                                        {comment.content}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <form
+                                onSubmit={submitComment}
+                                className="mt-3 flex gap-2"
+                            >
+                                <input
+                                    value={commentText}
+                                    onChange={(event) =>
+                                        setCommentText(event.target.value)
+                                    }
+                                    placeholder="Write a comment..."
+                                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/4 px-3 py-2 text-xs text-white outline-none placeholder:text-slate-600 focus:border-lime-300/40"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={commentSubmitting}
+                                    className="grid size-9 shrink-0 place-items-center rounded-xl bg-lime-300 text-slate-950 transition hover:bg-lime-200 disabled:opacity-60"
+                                    aria-label="Send comment"
+                                >
+                                    <Send className="size-3.5" />
+                                </button>
+                            </form>
+                        </div>
+                    )}
                 </div>
             </div>
         </article>
