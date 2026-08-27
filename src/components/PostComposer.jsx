@@ -1,16 +1,18 @@
 import { ImagePlus, Send, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-function PostComposer() {
+function PostComposer({ onPostCreated }) {
     const [body, setBody] = useState("");
     const [file, setFile] = useState(null);
+    const [error, setError] = useState("");
+    const [status, setStatus] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const fileInputRef = useRef(null);
+
     const preview = useMemo(
         () => (file ? URL.createObjectURL(file) : ""),
         [file],
     );
-    const [error, setError] = useState("");
-    const [status, setStatus] = useState("");
-    const fileInputRef = useRef(null);
 
     useEffect(() => {
         return () => {
@@ -21,17 +23,20 @@ function PostComposer() {
     const onFileChange = (event) => {
         const selected = event.target.files?.[0];
         if (!selected) return;
+
         if (!selected.type.startsWith("image/")) {
             setError("Please choose an image file.");
             return;
         }
+
         if (selected.size > 5 * 1024 * 1024) {
             setError("Images must be smaller than 5 MB.");
             return;
         }
+
         setError("");
         setFile(selected);
-        setStatus("");
+        setStatus("Images are preview-only for now; text will be posted.");
     };
 
     const clearFile = () => {
@@ -39,14 +44,46 @@ function PostComposer() {
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        if (!body.trim() && !file) {
-            setError("Add a thought or an image before posting.");
+
+        if (!body.trim()) {
+            setError("Add some text before posting.");
             return;
         }
+
         setError("");
-        setStatus("Post composer ready for backend upload");
+        setStatus("");
+        setSubmitting(true);
+
+        try {
+            const response = await fetch("/api/posts", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    content: body.trim(),
+                    author_id: 1,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Unable to create post.");
+            }
+
+            setBody("");
+            clearFile();
+            setStatus("Post shared with your campus.");
+            onPostCreated?.(data);
+        } catch (requestError) {
+            console.error("Error creating post:", requestError);
+            setError(requestError.message);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -63,12 +100,14 @@ function PostComposer() {
                     onChange={(event) => {
                         setBody(event.target.value);
                         setStatus("");
+                        setError("");
                     }}
                     rows="2"
                     placeholder="Share a campus moment..."
                     className="min-h-[64px] flex-1 resize-none bg-transparent text-sm leading-6 text-white outline-none placeholder:text-slate-600"
                 />
             </div>
+
             {preview && (
                 <div className="relative mt-4 overflow-hidden rounded-2xl border border-white/8">
                     <img
@@ -86,16 +125,19 @@ function PostComposer() {
                     </button>
                 </div>
             )}
+
             {error && (
                 <p className="mt-3 text-xs font-medium text-rose-300">
                     {error}
                 </p>
             )}
+
             {status && (
                 <p className="mt-3 text-xs font-medium text-lime-300">
                     {status}
                 </p>
             )}
+
             <div className="mt-4 flex items-center justify-between border-t border-white/8 pt-4">
                 <div className="flex items-center gap-2">
                     <input
@@ -118,9 +160,11 @@ function PostComposer() {
                 </div>
                 <button
                     type="submit"
-                    className="flex items-center gap-2 rounded-xl bg-lime-300 px-3.5 py-2 text-xs font-bold text-slate-950 transition hover:bg-lime-200 active:scale-[0.98]"
+                    disabled={submitting}
+                    className="flex items-center gap-2 rounded-xl bg-lime-300 px-3.5 py-2 text-xs font-bold text-slate-950 transition hover:bg-lime-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                    <Send className="size-3.5" /> Post
+                    <Send className="size-3.5" />
+                    {submitting ? "Posting..." : "Post"}
                 </button>
             </div>
         </form>

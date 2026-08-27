@@ -48,6 +48,16 @@ function Feed() {
         return post.content.toLowerCase().includes(query);
     });
 
+    const handlePostCreated = (createdPost) => {
+        const formattedPost = {
+            ...createdPost,
+            text: createdPost.content,
+            eyebrow: "Campus post",
+            tags: [],
+        };
+
+        setPosts((currentPosts) => [formattedPost, ...currentPosts]);
+    };
     return (
         <div className="motion-rise space-y-5">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -103,7 +113,7 @@ function Feed() {
                 </span>
             </div>
 
-            <PostComposer />
+            <PostComposer onPostCreated={handlePostCreated} />
 
             {loading && (
                 <div className="grid place-items-center rounded-3xl border border-white/8 bg-white/[0.02] py-20 text-center">
