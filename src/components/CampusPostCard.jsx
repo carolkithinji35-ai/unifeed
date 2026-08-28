@@ -5,10 +5,13 @@ import {
     Repeat2,
     Send,
     Share2,
+    Trash2,
+    Edit3,
 } from "lucide-react";
 import { useState } from "react";
+import { apiRequest } from "../lib/authApi";
 
-function CampusPostCard({ post, index, currentUser }) {
+function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
     const [liked, setLiked] = useState(false);
     const [likes, setLikes] = useState(64 + index * 13);
     const [bookmarked, setBookmarked] = useState(() => {
@@ -21,6 +24,74 @@ function CampusPostCard({ post, index, currentUser }) {
     const [commentsLoading, setCommentsLoading] = useState(false);
     const [commentSubmitting, setCommentSubmitting] = useState(false);
     const [commentError, setCommentError] = useState("");
+    const [deleting, setDeleting] = useState(false);
+    const [editing, setEditing] = useState(false);
+    const [editText, setEditText] = useState(post.text || post.content || "");
+    const [savingEdit, setSavingEdit] = useState(false);
+
+    const handleSaveEdit = async () => {
+        if (!editText.trim()) {
+            setCommentError("Post content cannot be empty.");
+            return;
+        }
+
+        setSavingEdit(true);
+        setCommentError("");
+
+        try {
+            const updatedPost = await apiRequest(`/api/posts/${post.id}`, {
+                method: "PATCH",
+                body: JSON.stringify({ content: editText.trim() }),
+            });
+            onUpdated?.(updatedPost);
+            setEditing(false);
+        } catch (error) {
+            console.error("Error updating post:", error);
+            setCommentError(error.message || "Unable to update this post.");
+        } finally {
+            setSavingEdit(false);
+        }
+    };
+
+    const handleDeleteComment = async (commentId) => {
+        try {
+            await apiRequest(`/api/comments/${commentId}`, {
+                method: "DELETE",
+            });
+            setComments((currentComments) =>
+                currentComments.filter((comment) => comment.id !== commentId),
+            );
+            setCommentCount((currentCount) => Math.max(0, currentCount - 1));
+        } catch (error) {
+            console.error("Error deleting comment:", error);
+            setCommentError(error.message || "Unable to delete this comment.");
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!currentUser || post.author_id !== currentUser.id) return;
+
+        const confirmed = window.confirm(
+            "Delete this post? This action cannot be undone.",
+        );
+
+        if (!confirmed) return;
+
+        setDeleting(true);
+        setCommentError("");
+
+        try {
+            await apiRequest(`/api/posts/${post.id}`, {
+                method: "DELETE",
+            });
+            onDeleted?.(post.id);
+        } catch (error) {
+            console.error("Error deleting post:", error);
+            setCommentError(error.message || "Unable to delete this post.");
+        } finally {
+            setDeleting(false);
+        }
+    };
 
     const toggleBookmark = () => {
         const nextBookmarked = !bookmarked;
@@ -42,12 +113,7 @@ function CampusPostCard({ post, index, currentUser }) {
         setCommentError("");
 
         try {
-            const response = await fetch(`/api/posts/${post.id}/comments`);
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || "Unable to load comments.");
-            }
+            const data = await apiRequest(`/api/posts/${post.id}/comments`);
 
             setComments(data);
             setCommentCount(data.length);
@@ -68,21 +134,12 @@ function CampusPostCard({ post, index, currentUser }) {
         setCommentError("");
 
         try {
-            const response = await fetch(`/api/posts/${post.id}/comments`, {
+            const data = await apiRequest(`/api/posts/${post.id}/comments`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
                 body: JSON.stringify({
                     content: commentText.trim(),
                 }),
             });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || "Unable to create comment.");
-            }
 
             setComments((currentComments) => [...currentComments, data]);
             setCommentCount((currentCount) => currentCount + 1);
@@ -120,31 +177,93 @@ function CampusPostCard({ post, index, currentUser }) {
                             </p>
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={toggleBookmark}
-                            className={`rounded-lg p-1 transition hover:bg-white/8 ${
-                                bookmarked
-                                    ? "text-lime-300"
-                                    : "text-slate-600 hover:text-white"
-                            }`}
-                            aria-label={
-                                bookmarked
-                                    ? "Remove bookmark"
-                                    : "Save campus post"
-                            }
-                            title={bookmarked ? "Remove bookmark" : "Save post"}
-                        >
-                            <Bookmark
-                                className="size-4"
-                                fill={bookmarked ? "currentColor" : "none"}
-                            />
-                        </button>
+                        <div className="flex items-center gap-1">
+                            {currentUser?.id === post.author_id && (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditing(true)}
+                                        className="rounded-lg p-1 text-slate-600 transition hover:bg-lime-300/10 hover:text-lime-300"
+                                        aria-label="Edit your post"
+                                        title="Edit your post"
+                                    >
+                                        <Edit3 className="size-4" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleDelete}
+                                        disabled={deleting}
+                                        className="rounded-lg p-1 text-slate-600 transition hover:bg-rose-300/10 hover:text-rose-300 disabled:opacity-50"
+                                        aria-label="Delete your post"
+                                        title="Delete your post"
+                                    >
+                                        <Trash2 className="size-4" />
+                                    </button>
+                                </>
+                            )}
+                            <button
+                                type="button"
+                                onClick={toggleBookmark}
+                                className={`rounded-lg p-1 transition hover:bg-white/8 ${
+                                    bookmarked
+                                        ? "text-lime-300"
+                                        : "text-slate-600 hover:text-white"
+                                }`}
+                                aria-label={
+                                    bookmarked
+                                        ? "Remove bookmark"
+                                        : "Save campus post"
+                                }
+                                title={
+                                    bookmarked ? "Remove bookmark" : "Save post"
+                                }
+                            >
+                                <Bookmark
+                                    className="size-4"
+                                    fill={bookmarked ? "currentColor" : "none"}
+                                />
+                            </button>
+                        </div>
                     </div>
 
-                    <p className="mt-4 text-[15px] leading-7 text-slate-200">
-                        {post.text}
-                    </p>
+                    {editing ? (
+                        <div className="mt-4 space-y-3">
+                            <textarea
+                                value={editText}
+                                onChange={(event) =>
+                                    setEditText(event.target.value)
+                                }
+                                rows="3"
+                                className="w-full resize-none rounded-xl border border-lime-300/30 bg-black/20 px-3 py-2 text-sm leading-6 text-white outline-none"
+                            />
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={handleSaveEdit}
+                                    disabled={savingEdit}
+                                    className="rounded-lg bg-lime-300 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-60"
+                                >
+                                    {savingEdit ? "Saving..." : "Save changes"}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setEditText(
+                                            post.text || post.content || "",
+                                        );
+                                        setEditing(false);
+                                    }}
+                                    className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="mt-4 text-[15px] leading-7 text-slate-200">
+                            {post.text}
+                        </p>
+                    )}
 
                     {post.tags?.length > 0 && (
                         <div className="mt-4 flex flex-wrap gap-2">
@@ -242,16 +361,34 @@ function CampusPostCard({ post, index, currentUser }) {
                                 {comments.map((comment) => (
                                     <div
                                         key={comment.id}
-                                        className="rounded-xl bg-white/[0.035] px-3 py-2 text-sm text-slate-300"
+                                        className="flex items-start justify-between gap-3 rounded-xl bg-white/[0.035] px-3 py-2 text-sm text-slate-300"
                                     >
-                                        <span className="font-semibold text-lime-300">
-                                            {comment.author?.username ||
-                                                "Student"}
-                                        </span>
-                                        <span className="text-slate-500">
-                                            :{" "}
-                                        </span>
-                                        {comment.content}
+                                        <p>
+                                            <span className="font-semibold text-lime-300">
+                                                {comment.author?.username ||
+                                                    "Student"}
+                                            </span>
+                                            <span className="text-slate-500">
+                                                :{" "}
+                                            </span>
+                                            {comment.content}
+                                        </p>
+                                        {currentUser?.id ===
+                                            comment.author_id && (
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    handleDeleteComment(
+                                                        comment.id,
+                                                    )
+                                                }
+                                                className="shrink-0 text-slate-600 hover:text-rose-300"
+                                                aria-label="Delete your comment"
+                                                title="Delete your comment"
+                                            >
+                                                <Trash2 className="size-3.5" />
+                                            </button>
+                                        )}
                                     </div>
                                 ))}
                             </div>

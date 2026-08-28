@@ -2,44 +2,46 @@ import { ChevronDown, Filter, Search, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import CampusPostCard from "../components/CampusPostCard";
 import PostComposer from "../components/PostComposer";
-
+import { apiRequest, getCurrentUser } from "../lib/authApi";
 
 function Feed() {
     const [posts, setPosts] = useState([]);
+    const [currentUser, setCurrentUser] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
     useEffect(() => {
+        getCurrentUser()
+            .then(setCurrentUser)
+            .catch(() => setCurrentUser(null));
+    }, []);
+
+    useEffect(() => {
         const fetchPosts = async () => {
             setLoading(true);
             setError("");
+
             try {
-                const response = await fetch(
-                    "/api/posts"
-                );
-                if (!response.ok) {
-                    throw new Error("Unable to load posts");
-                }
-                const data = await response.json();
-                const formattedPosts = data.map((post) => (
-                    {
-                        ...post,
-                        text: post.content,
-                        eyebrow: "Campus post",
-                        tags :[]
-                    }
-                ))
+                const data = await apiRequest("/api/posts");
+                const formattedPosts = data.map((post) => ({
+                    ...post,
+                    text: post.content,
+                    eyebrow: "Campus post",
+                    tags: [],
+                }));
 
                 setPosts(formattedPosts);
-                
             } catch (requestError) {
                 console.error("Error fetching posts:", requestError);
-                setError("We could not load the campus feed. Please try again.");
+                setError(
+                    "We could not load the campus feed. Please try again.",
+                );
             } finally {
                 setLoading(false);
             }
         };
+
         fetchPosts();
     }, []);
 
@@ -47,6 +49,27 @@ function Feed() {
         const query = searchTerm.toLowerCase();
         return post.content.toLowerCase().includes(query);
     });
+
+    const handlePostUpdated = (updatedPost) => {
+        const formattedPost = {
+            ...updatedPost,
+            text: updatedPost.content,
+            eyebrow: "Campus post",
+            tags: [],
+        };
+
+        setPosts((currentPosts) =>
+            currentPosts.map((post) =>
+                post.id === updatedPost.id ? formattedPost : post,
+            ),
+        );
+    };
+
+    const handlePostDeleted = (postId) => {
+        setPosts((currentPosts) =>
+            currentPosts.filter((post) => post.id !== postId),
+        );
+    };
 
     const handlePostCreated = (createdPost) => {
         const formattedPost = {
@@ -58,6 +81,7 @@ function Feed() {
 
         setPosts((currentPosts) => [formattedPost, ...currentPosts]);
     };
+
     return (
         <div className="motion-rise space-y-5">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -87,7 +111,7 @@ function Feed() {
                     type="text"
                     placeholder="Search campus posts..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(event) => setSearchTerm(event.target.value)}
                     className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-600"
                 />
                 <span className="hidden text-xs text-slate-600 sm:block">
@@ -113,7 +137,10 @@ function Feed() {
                 </span>
             </div>
 
-            <PostComposer onPostCreated={handlePostCreated} />
+            <PostComposer
+                onPostCreated={handlePostCreated}
+                currentUser={currentUser}
+            />
 
             {loading && (
                 <div className="grid place-items-center rounded-3xl border border-white/8 bg-white/[0.02] py-20 text-center">
@@ -137,6 +164,9 @@ function Feed() {
                             key={post.id}
                             post={post}
                             index={index}
+                            currentUser={currentUser}
+                            onDeleted={handlePostDeleted}
+                            onUpdated={handlePostUpdated}
                         />
                     ))}
                 </div>
