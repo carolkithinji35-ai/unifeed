@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-function CampusPostCard({ post, index }) {
+function CampusPostCard({ post, index, currentUser }) {
     const [liked, setLiked] = useState(false);
     const [likes, setLikes] = useState(64 + index * 13);
     const [bookmarked, setBookmarked] = useState(() => {
@@ -75,7 +75,6 @@ function CampusPostCard({ post, index }) {
                 },
                 body: JSON.stringify({
                     content: commentText.trim(),
-                    author_id: 1,
                 }),
             });
 

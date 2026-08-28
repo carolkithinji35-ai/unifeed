@@ -1,7 +1,7 @@
 import { ImagePlus, Send, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-function PostComposer({ onPostCreated }) {
+function PostComposer({ onPostCreated, currentUser }) {
     const [body, setBody] = useState("");
     const [file, setFile] = useState(null);
     const [error, setError] = useState("");
@@ -64,7 +64,6 @@ function PostComposer({ onPostCreated }) {
                 },
                 body: JSON.stringify({
                     content: body.trim(),
-                    author_id: 1,
                 }),
             });
 
@@ -93,7 +92,7 @@ function PostComposer({ onPostCreated }) {
         >
             <div className="flex gap-3">
                 <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-lime-300 text-sm font-bold text-slate-950">
-                    U
+                    {currentUser?.username?.charAt(0).toUpperCase() || "U"}
                 </div>
                 <textarea
                     value={body}
