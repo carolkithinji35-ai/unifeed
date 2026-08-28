@@ -1,11 +1,10 @@
 import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import AuthShell from "../components/AuthShell";
 import { loginUser } from "../lib/authApi";
 
 function SignIn() {
-    const navigate = useNavigate();
     const [form, setForm] = useState({
         identifier: "",
         password: "",
@@ -21,21 +20,28 @@ function SignIn() {
     const submit = async (event) => {
         event.preventDefault();
         setError("");
+
         if (!form.identifier.trim() || !form.password) {
-            setError("Enter your email or username and password.");
+            setError("Enter your email and password.");
             return;
         }
+
         setLoading(true);
+
         try {
-            await loginUser(form);
-            navigate("/");
+            await loginUser({
+                identifier: form.identifier.trim(),
+                password: form.password,
+            });
+
+            // Reload after login so Feed reads the new Flask session cookie.
+            window.location.assign("/");
         } catch (requestError) {
             setError(
                 requestError.message.includes("Failed to fetch")
-                    ? "Authentication is not connected yet. Your Flask API can use this form when it is ready."
+                    ? "The authentication server could not be reached. Check that the API is live and try again."
                     : requestError.message,
             );
-        } finally {
             setLoading(false);
         }
     };
@@ -60,7 +66,7 @@ function SignIn() {
             <form onSubmit={submit} className="space-y-5">
                 <label className="block">
                     <span className="mb-2 block text-xs font-semibold text-slate-300">
-                        Email or username
+                        Email address
                     </span>
                     <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/15 px-3.5 py-3 transition focus-within:border-lime-300/50">
                         <Mail className="size-4 text-slate-600" />
@@ -75,6 +81,7 @@ function SignIn() {
                         />
                     </div>
                 </label>
+
                 <label className="block">
                     <span className="mb-2 block text-xs font-semibold text-slate-300">
                         Password
@@ -107,6 +114,7 @@ function SignIn() {
                         </button>
                     </div>
                 </label>
+
                 <div className="flex items-center justify-between gap-3 text-xs">
                     <label className="flex items-center gap-2 text-slate-500">
                         <input
@@ -126,11 +134,13 @@ function SignIn() {
                         Forgot password?
                     </Link>
                 </div>
+
                 {error && (
                     <p className="rounded-xl border border-rose-300/20 bg-rose-300/5 px-3 py-2.5 text-xs leading-5 text-rose-200">
                         {error}
                     </p>
                 )}
+
                 <button
                     type="submit"
                     disabled={loading}

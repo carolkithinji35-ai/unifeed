@@ -1,15 +1,17 @@
 import {
     Bell,
     Bookmark,
+    CalendarDays,
     Compass,
     Home,
     MessageCircle,
     Plus,
     UserRound,
     UsersRound,
-    CalendarDays,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { getCurrentUser } from "../lib/authApi";
 
 const primaryItems = [
     { label: "Home", icon: Home, path: "/" },
@@ -26,9 +28,20 @@ const activityItems = [
 
 function Sidebar() {
     const location = useLocation();
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        getCurrentUser()
+            .then(setUser)
+            .catch(() => setUser(null));
+    }, []);
+
+    const displayName = user?.username || "UniFeed member";
+    const profilePath = user ? `/profile/${user.id}` : "/signin";
 
     const renderItem = ({ label, icon: Icon, path, badge }) => {
         const active = location.pathname === path;
+
         return (
             <Link
                 key={label}
@@ -59,16 +72,19 @@ function Sidebar() {
                         Stay in the loop
                     </p>
                 </div>
+
                 <nav
                     className="flex gap-2 lg:block lg:space-y-1"
                     aria-label="Main navigation"
                 >
                     {primaryItems.map(renderItem)}
                 </nav>
+
                 <div className="my-4 hidden border-t border-white/8 lg:block" />
                 <p className="mb-2 hidden px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600 lg:block">
                     Your activity
                 </p>
+
                 <nav
                     className="hidden gap-2 lg:block lg:space-y-1"
                     aria-label="Activity navigation"
@@ -86,18 +102,22 @@ function Sidebar() {
 
             <div className="mt-auto hidden border-t border-white/8 pt-5 lg:block">
                 <Link
-                    to="/profile/me"
+                    to={profilePath}
                     className="flex items-center gap-3 rounded-2xl p-2 text-slate-300 transition hover:bg-white/[0.06]"
                 >
                     <span className="grid size-9 place-items-center rounded-full bg-slate-800 text-lime-300">
-                        <UserRound className="size-4" />
+                        {user?.username ? (
+                            user.username.charAt(0).toUpperCase()
+                        ) : (
+                            <UserRound className="size-4" />
+                        )}
                     </span>
                     <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold">
-                            My profile
+                            {user ? displayName : "Sign in to view profile"}
                         </span>
-                        <span className="block text-xs text-slate-500">
-                            @yourhandle
+                        <span className="block truncate text-xs text-slate-500">
+                            {user ? `@${displayName}` : "No active session"}
                         </span>
                     </span>
                 </Link>

@@ -1,5 +1,6 @@
 import { ImagePlus, Send, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { apiRequest } from "../lib/authApi";
 
 function PostComposer({ onPostCreated, currentUser }) {
     const [body, setBody] = useState("");
@@ -57,21 +58,12 @@ function PostComposer({ onPostCreated, currentUser }) {
         setSubmitting(true);
 
         try {
-            const response = await fetch("/api/posts", {
+            const data = await apiRequest("/api/posts", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
                 body: JSON.stringify({
                     content: body.trim(),
                 }),
             });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || "Unable to create post.");
-            }
 
             setBody("");
             clearFile();
