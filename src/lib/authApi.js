@@ -13,11 +13,13 @@ export async function apiRequest(endpoint, options = {}) {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-        throw new Error(
+        const error = new Error(
             data.error ||
                 data.message ||
                 "Something went wrong. Please try again.",
         );
+        error.status = response.status;
+        throw error;
     }
 
     return data;

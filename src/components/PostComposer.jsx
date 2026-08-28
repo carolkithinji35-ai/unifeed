@@ -1,8 +1,10 @@
 import { ImagePlus, Send, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiRequest } from "../lib/authApi";
 
 function PostComposer({ onPostCreated, currentUser }) {
+    const navigate = useNavigate();
     const [body, setBody] = useState("");
     const [file, setFile] = useState(null);
     const [error, setError] = useState("");
@@ -71,6 +73,12 @@ function PostComposer({ onPostCreated, currentUser }) {
             onPostCreated?.(data);
         } catch (requestError) {
             console.error("Error creating post:", requestError);
+
+            if (requestError.status === 401) {
+                navigate("/signin");
+                return;
+            }
+
             setError(requestError.message);
         } finally {
             setSubmitting(false);

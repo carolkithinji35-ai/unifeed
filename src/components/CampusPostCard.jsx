@@ -9,9 +9,11 @@ import {
     Edit3,
 } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiRequest } from "../lib/authApi";
 
 function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
+    const navigate = useNavigate();
     const [liked, setLiked] = useState(false);
     const [likes, setLikes] = useState(64 + index * 13);
     const [bookmarked, setBookmarked] = useState(() => {
@@ -28,6 +30,7 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
     const [editing, setEditing] = useState(false);
     const [editText, setEditText] = useState(post.text || post.content || "");
     const [savingEdit, setSavingEdit] = useState(false);
+
 
     const handleSaveEdit = async () => {
         if (!editText.trim()) {
@@ -113,7 +116,9 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
         setCommentError("");
 
         try {
-            const data = await apiRequest(`/api/posts/${post.id}/comments`);
+            const data = await apiRequest(
+                `/api/posts/${post.id}/comments`,
+            );
 
             setComments(data);
             setCommentCount(data.length);
@@ -128,18 +133,22 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
     const submitComment = async (event) => {
         event.preventDefault();
 
+
         if (!commentText.trim()) return;
 
         setCommentSubmitting(true);
         setCommentError("");
 
         try {
-            const data = await apiRequest(`/api/posts/${post.id}/comments`, {
-                method: "POST",
-                body: JSON.stringify({
-                    content: commentText.trim(),
-                }),
-            });
+            const data = await apiRequest(
+                `/api/posts/${post.id}/comments`,
+                {
+                    method: "POST",
+                    body: JSON.stringify({
+                        content: commentText.trim(),
+                    }),
+                },
+            );
 
             setComments((currentComments) => [...currentComments, data]);
             setCommentCount((currentCount) => currentCount + 1);
@@ -147,6 +156,12 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
             setCommentsOpen(true);
         } catch (error) {
             console.error("Error creating comment:", error);
+
+            if (error.status === 401) {
+                navigate("/signin");
+                return;
+            }
+
             setCommentError(error.message);
         } finally {
             setCommentSubmitting(false);
@@ -165,8 +180,7 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                         <div>
                             <div className="flex flex-wrap items-center gap-2">
                                 <span className="text-sm font-semibold text-white">
-                                    {post.author?.username ??
-                                        "UniFeed Campus Desk"}
+                                    {post.author?.username ?? "UniFeed Campus Desk"}
                                 </span>
                                 <span className="rounded-full bg-lime-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-lime-300">
                                     {post.eyebrow || "Campus post"}
@@ -192,32 +206,30 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                                     <button
                                         type="button"
                                         onClick={handleDelete}
-                                        disabled={deleting}
-                                        className="rounded-lg p-1 text-slate-600 transition hover:bg-rose-300/10 hover:text-rose-300 disabled:opacity-50"
-                                        aria-label="Delete your post"
-                                        title="Delete your post"
-                                    >
+                                    disabled={deleting}
+                                    className="rounded-lg p-1 text-slate-600 transition hover:bg-rose-300/10 hover:text-rose-300 disabled:opacity-50"
+                                    aria-label="Delete your post"
+                                    title="Delete your post"
+                                >
                                         <Trash2 className="size-4" />
                                     </button>
                                 </>
                             )}
                             <button
-                                type="button"
-                                onClick={toggleBookmark}
-                                className={`rounded-lg p-1 transition hover:bg-white/8 ${
-                                    bookmarked
-                                        ? "text-lime-300"
-                                        : "text-slate-600 hover:text-white"
-                                }`}
-                                aria-label={
-                                    bookmarked
-                                        ? "Remove bookmark"
-                                        : "Save campus post"
-                                }
-                                title={
-                                    bookmarked ? "Remove bookmark" : "Save post"
-                                }
-                            >
+                            type="button"
+                            onClick={toggleBookmark}
+                            className={`rounded-lg p-1 transition hover:bg-white/8 ${
+                                bookmarked
+                                    ? "text-lime-300"
+                                    : "text-slate-600 hover:text-white"
+                            }`}
+                            aria-label={
+                                bookmarked
+                                    ? "Remove bookmark"
+                                    : "Save campus post"
+                            }
+                            title={bookmarked ? "Remove bookmark" : "Save post"}
+                        >
                                 <Bookmark
                                     className="size-4"
                                     fill={bookmarked ? "currentColor" : "none"}
@@ -230,9 +242,7 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                         <div className="mt-4 space-y-3">
                             <textarea
                                 value={editText}
-                                onChange={(event) =>
-                                    setEditText(event.target.value)
-                                }
+                                onChange={(event) => setEditText(event.target.value)}
                                 rows="3"
                                 className="w-full resize-none rounded-xl border border-lime-300/30 bg-black/20 px-3 py-2 text-sm leading-6 text-white outline-none"
                             />
@@ -248,9 +258,7 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setEditText(
-                                            post.text || post.content || "",
-                                        );
+                                        setEditText(post.text || post.content || "");
                                         setEditing(false);
                                     }}
                                     className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white"
@@ -291,8 +299,7 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                         >
                             <MessageCircle className="size-4" />
                             <span>
-                                {commentCount}{" "}
-                                {commentCount === 1 ? "comment" : "comments"}
+                                {commentCount} {commentCount === 1 ? "comment" : "comments"}
                             </span>
                         </button>
 
@@ -365,23 +372,15 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                                     >
                                         <p>
                                             <span className="font-semibold text-lime-300">
-                                                {comment.author?.username ||
-                                                    "Student"}
+                                                {comment.author?.username || "Student"}
                                             </span>
-                                            <span className="text-slate-500">
-                                                :{" "}
-                                            </span>
+                                            <span className="text-slate-500">: </span>
                                             {comment.content}
                                         </p>
-                                        {currentUser?.id ===
-                                            comment.author_id && (
+                                        {currentUser?.id === comment.author_id && (
                                             <button
                                                 type="button"
-                                                onClick={() =>
-                                                    handleDeleteComment(
-                                                        comment.id,
-                                                    )
-                                                }
+                                                onClick={() => handleDeleteComment(comment.id)}
                                                 className="shrink-0 text-slate-600 hover:text-rose-300"
                                                 aria-label="Delete your comment"
                                                 title="Delete your comment"
@@ -423,3 +422,4 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
 }
 
 export default CampusPostCard;
+
