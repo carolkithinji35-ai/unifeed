@@ -46,9 +46,9 @@ function Sidebar() {
             <Link
                 key={label}
                 to={path}
-                className={`group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition ${active ? "bg-lime-300 text-slate-950 shadow-[0_8px_30px_rgba(163,230,53,0.12)]" : "text-slate-400 hover:bg-white/[0.06] hover:text-white"}`}
+                className={`group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition ${active ? "bg-lime-300 text-slate-950 shadow-[0_8px_30px_rgba(163,230,53,0.12)]" : "text-slate-400 hover:bg-white/6 hover:text-white"}`}
             >
-                <Icon className="size-[18px]" strokeWidth={active ? 2.5 : 2} />
+                <Icon className="size-4.5" strokeWidth={active ? 2.5 : 2} />
                 <span className="flex-1">{label}</span>
                 {badge && (
                     <span
@@ -62,8 +62,8 @@ function Sidebar() {
     };
 
     return (
-        <aside className="lg:sticky lg:top-28 lg:h-[calc(100vh-9rem)]">
-            <div className="flex items-center justify-between lg:block">
+        <aside className="lg:sticky lg:top-28 lg:flex lg:h-[calc(100vh-9rem)] lg:flex-col">
+            <div className="sidebar-scroll flex items-center justify-between lg:min-h-0 lg:flex-1 lg:block lg:overflow-y-auto">
                 <div className="mb-5 hidden px-3 lg:block">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-lime-300/80">
                         Your space
