@@ -4,6 +4,7 @@ import {
     Heart,
     LoaderCircle,
     MessageCircle,
+    UserPlus,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -51,11 +52,32 @@ function NotificationIcon({ type }) {
         return <MessageCircle className="size-4" />;
     }
 
+    if (type === "follow") {
+        return <UserPlus className="size-4" />;
+    }
+
     return <Bell className="size-4" />;
+}
+
+function notificationIconStyles(type) {
+    if (type === "like") {
+        return "bg-rose-400/15 text-rose-300";
+    }
+
+    if (type === "comment") {
+        return "bg-sky-400/15 text-sky-300";
+    }
+
+    if (type === "follow") {
+        return "bg-lime-300/15 text-lime-300";
+    }
+
+    return "bg-slate-400/15 text-slate-300";
 }
 
 function Notifications() {
     const navigate = useNavigate();
+
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -80,7 +102,7 @@ function Notifications() {
                 const data = await apiRequest("/api/notifications");
 
                 if (!cancelled) {
-                    setNotifications(data);
+                    setNotifications(Array.isArray(data) ? data : []);
                 }
             } catch (requestError) {
                 console.error("Error loading notifications:", requestError);
@@ -136,6 +158,7 @@ function Notifications() {
             window.dispatchEvent(new Event("unifeed:notifications-updated"));
         } catch (requestError) {
             console.error("Error marking notification as read:", requestError);
+
             setError(
                 requestError.message ||
                     "Unable to mark this notification as read.",
@@ -146,7 +169,9 @@ function Notifications() {
     };
 
     const markAllAsRead = async () => {
-        if (unreadCount === 0) return;
+        if (unreadCount === 0) {
+            return;
+        }
 
         setMarkingAll(true);
         setError("");
@@ -169,6 +194,7 @@ function Notifications() {
                 "Error marking all notifications as read:",
                 requestError,
             );
+
             setError(
                 requestError.message ||
                     "Unable to mark all notifications as read.",
@@ -203,8 +229,8 @@ function Notifications() {
                     </h1>
 
                     <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-                        See who is responding to your posts and join the
-                        conversation.
+                        See who liked, commented on, or followed your UniFeed
+                        profile.
                     </p>
                 </div>
 
@@ -237,7 +263,7 @@ function Notifications() {
                         </h2>
 
                         <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">
-                            Likes and comments on your posts will appear here.
+                            Likes, comments, and new followers will appear here.
                         </p>
                     </div>
                 </div>
@@ -253,15 +279,11 @@ function Notifications() {
                             }`}
                         >
                             <div
-                                className={`grid size-10 shrink-0 place-items-center rounded-xl ${
-                                    notification.type === "like"
-                                        ? "bg-rose-400/15 text-rose-300"
-                                        : "bg-sky-400/15 text-sky-300"
-                                }`}
+                                className={`grid size-10 shrink-0 place-items-center rounded-xl ${notificationIconStyles(
+                                    notification.type,
+                                )}`}
                             >
-                                <NotificationIcon
-                                    type={notification.type}
-                                />
+                                <NotificationIcon type={notification.type} />
                             </div>
 
                             <div className="min-w-0 flex-1">
@@ -279,9 +301,7 @@ function Notifications() {
                             {!notification.is_read && (
                                 <button
                                     type="button"
-                                    onClick={() =>
-                                        markAsRead(notification.id)
-                                    }
+                                    onClick={() => markAsRead(notification.id)}
                                     disabled={markingId === notification.id}
                                     className="shrink-0 rounded-lg border border-lime-300/20 px-2.5 py-1.5 text-[11px] font-semibold text-lime-300 transition hover:bg-lime-300/10 disabled:opacity-50"
                                 >

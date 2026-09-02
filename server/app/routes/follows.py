@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, session
 
 from app.extensions import db
 from app.models import Follow, User
+from app.services.notifications import add_follow_notification
 
 
 follows_bp = Blueprint("follows", __name__)
@@ -60,7 +61,7 @@ def get_follow_status(user_id):
 
 @follows_bp.post("/users/<int:user_id>/follow")
 def follow_user(user_id):
-    """Follow another user."""
+    """Follow another user and create a notification."""
     current_user = get_authenticated_user()
 
     if current_user is None:
@@ -86,6 +87,8 @@ def follow_user(user_id):
                 following_id=target_user.id,
             )
         )
+
+        add_follow_notification(current_user, target_user)
         db.session.commit()
 
     return jsonify(
