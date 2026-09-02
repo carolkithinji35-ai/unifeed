@@ -21,9 +21,12 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
         Boolean(post.reposted_by_current_user),
     );
     const [reposts, setReposts] = useState(post.repost_count ?? 0);
-    const [bookmarked, setBookmarked] = useState(() => {
-        return localStorage.getItem(`unifeed-bookmark-${post.id}`) === "true";
-    });
+    const [bookmarked, setBookmarked] = useState(
+        Boolean(post.bookmarked_by_current_user),
+    );
+    const [bookmarkCount, setBookmarkCount] = useState(
+        post.bookmark_count ?? 0,
+    );
     const [comments, setComments] = useState([]);
     const [commentCount, setCommentCount] = useState(post.comment_count ?? 0);
     const [commentsOpen, setCommentsOpen] = useState(false);
@@ -36,6 +39,15 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
     const [editText, setEditText] = useState(post.text || post.content || "");
     const [savingEdit, setSavingEdit] = useState(false);
     const [socialActionLoading, setSocialActionLoading] = useState("");
+
+    const applyPostState = (data) => {
+        setLiked(Boolean(data.liked_by_current_user));
+        setLikes(data.like_count ?? 0);
+        setReposted(Boolean(data.reposted_by_current_user));
+        setReposts(data.repost_count ?? 0);
+        setBookmarked(Boolean(data.bookmarked_by_current_user));
+        setBookmarkCount(data.bookmark_count ?? 0);
+    };
 
     const handleSaveEdit = async () => {
         if (!editText.trim()) {
@@ -103,16 +115,6 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
         }
     };
 
-    const toggleBookmark = () => {
-        const nextBookmarked = !bookmarked;
-
-        setBookmarked(nextBookmarked);
-        localStorage.setItem(
-            `unifeed-bookmark-${post.id}`,
-            String(nextBookmarked),
-        );
-    };
-
     const handleLike = async () => {
         if (!currentUser) {
             navigate("/signin");
@@ -120,17 +122,14 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
         }
 
         setSocialActionLoading("like");
+        setCommentError("");
 
         try {
-            const endpoint = `/api/posts/${post.id}/like`;
-            const data = await apiRequest(endpoint, {
+            const data = await apiRequest(`/api/posts/${post.id}/like`, {
                 method: liked ? "DELETE" : "POST",
             });
 
-            setLiked(Boolean(data.liked_by_current_user));
-            setLikes(data.like_count ?? 0);
-            setReposted(Boolean(data.reposted_by_current_user));
-            setReposts(data.repost_count ?? 0);
+            applyPostState(data);
         } catch (error) {
             console.error("Error updating like:", error);
 
@@ -151,17 +150,14 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
         }
 
         setSocialActionLoading("repost");
+        setCommentError("");
 
         try {
-            const endpoint = `/api/posts/${post.id}/repost`;
-            const data = await apiRequest(endpoint, {
+            const data = await apiRequest(`/api/posts/${post.id}/repost`, {
                 method: reposted ? "DELETE" : "POST",
             });
 
-            setReposted(Boolean(data.reposted_by_current_user));
-            setReposts(data.repost_count ?? 0);
-            setLiked(Boolean(data.liked_by_current_user));
-            setLikes(data.like_count ?? 0);
+            applyPostState(data);
         } catch (error) {
             console.error("Error updating repost:", error);
 
@@ -170,6 +166,36 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
             } else {
                 setCommentError(
                     error.message || "Unable to update this repost.",
+                );
+            }
+        } finally {
+            setSocialActionLoading("");
+        }
+    };
+
+    const handleBookmark = async () => {
+        if (!currentUser) {
+            navigate("/signin");
+            return;
+        }
+
+        setSocialActionLoading("bookmark");
+        setCommentError("");
+
+        try {
+            const data = await apiRequest(`/api/posts/${post.id}/bookmark`, {
+                method: bookmarked ? "DELETE" : "POST",
+            });
+
+            applyPostState(data);
+        } catch (error) {
+            console.error("Error updating bookmark:", error);
+
+            if (error.status === 401) {
+                navigate("/signin");
+            } else {
+                setCommentError(
+                    error.message || "Unable to update this bookmark.",
                 );
             }
         } finally {
@@ -310,12 +336,13 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
 
                             <button
                                 type="button"
-                                onClick={toggleBookmark}
+                                onClick={handleBookmark}
+                                disabled={socialActionLoading === "bookmark"}
                                 className={`rounded-lg p-1 transition hover:bg-white/8 ${
                                     bookmarked
                                         ? "text-lime-300"
                                         : "text-slate-600 hover:text-white"
-                                }`}
+                                } disabled:opacity-50`}
                                 aria-label={
                                     bookmarked
                                         ? "Remove bookmark"

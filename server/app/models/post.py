@@ -39,6 +39,11 @@ class Post(db.Model):
         back_populates="post",
         cascade="all, delete-orphan",
     )
+    bookmarks = db.relationship(
+        "Bookmark",
+        back_populates="post",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<Post {self.id}>"

@@ -5,6 +5,7 @@ import {
     Routes,
     useLocation,
 } from "react-router-dom";
+import Bookmarks from "./pages/Bookmarks";
 import ForgotPassword from "./pages/ForgotPassword";
 import Explore from "./pages/Explore";
 import Feed from "./pages/Feed";
@@ -57,10 +58,7 @@ function App() {
                         path="/messages"
                         element={<FuturePage type="messages" />}
                     />
-                    <Route
-                        path="/bookmarks"
-                        element={<FuturePage type="bookmarks" />}
-                    />
+                    <Route path="/bookmarks" element={<Bookmarks />} />
                 </Routes>
             </Layout>
         </Router>

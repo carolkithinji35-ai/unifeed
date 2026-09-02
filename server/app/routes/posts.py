@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, session
 
 from app.extensions import db
-from app.models import Like, Post, Repost, User
+from app.models import Bookmark, Like, Post, Repost, User
 from app.schemas.post_schema import (
     post_to_dict,
     validate_post_data,
@@ -259,6 +259,89 @@ def unrepost_post(post_id):
 
     if existing_repost is not None:
         db.session.delete(existing_repost)
+        db.session.commit()
+
+    return jsonify(
+        post_to_dict(
+            post,
+            current_user_id=user.id,
+        )
+    ), 200
+
+
+@posts_bp.get("/bookmarks")
+def get_bookmarks():
+    """Return the authenticated user's bookmarked posts."""
+    user = get_authenticated_user()
+
+    if user is None:
+        return jsonify({"error": "Authentication required."}), 401
+
+    bookmarks = Bookmark.query.filter_by(user_id=user.id).order_by(
+        Bookmark.created_at.desc()
+    ).all()
+
+    return jsonify(
+        [
+            post_to_dict(
+                bookmark.post,
+                current_user_id=user.id,
+            )
+            for bookmark in bookmarks
+        ]
+    ), 200
+
+
+@posts_bp.post("/posts/<int:post_id>/bookmark")
+def bookmark_post(post_id):
+    """Bookmark a post for the authenticated user."""
+    user = get_authenticated_user()
+
+    if user is None:
+        return jsonify({"error": "Authentication required."}), 401
+
+    post = db.session.get(Post, post_id)
+
+    if post is None:
+        return jsonify({"error": "Post not found."}), 404
+
+    existing_bookmark = Bookmark.query.filter_by(
+        user_id=user.id,
+        post_id=post.id,
+    ).first()
+
+    if existing_bookmark is None:
+        db.session.add(Bookmark(user_id=user.id, post_id=post.id))
+        db.session.commit()
+
+    return jsonify(
+        post_to_dict(
+            post,
+            current_user_id=user.id,
+        )
+    ), 200
+
+
+@posts_bp.delete("/posts/<int:post_id>/bookmark")
+def unbookmark_post(post_id):
+    """Remove the authenticated user's bookmark from a post."""
+    user = get_authenticated_user()
+
+    if user is None:
+        return jsonify({"error": "Authentication required."}), 401
+
+    post = db.session.get(Post, post_id)
+
+    if post is None:
+        return jsonify({"error": "Post not found."}), 404
+
+    existing_bookmark = Bookmark.query.filter_by(
+        user_id=user.id,
+        post_id=post.id,
+    ).first()
+
+    if existing_bookmark is not None:
+        db.session.delete(existing_bookmark)
         db.session.commit()
 
     return jsonify(
