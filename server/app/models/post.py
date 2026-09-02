@@ -44,6 +44,11 @@ class Post(db.Model):
         back_populates="post",
         cascade="all, delete-orphan",
     )
+    notifications = db.relationship(
+        "Notification",
+        back_populates="post",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<Post {self.id}>"

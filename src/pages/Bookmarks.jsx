@@ -68,7 +68,8 @@ function Bookmarks() {
                 currentBookmarks.filter((post) => post.id !== postId),
             );
 
-            window.dispatchEvent(new Event("unifeed:bookmarks-changed"));
+            window.dispatchEvent(new Event("unifeed:bookmark-removed"));
+
         } catch (requestError) {
             console.error("Error removing bookmark:", requestError);
 

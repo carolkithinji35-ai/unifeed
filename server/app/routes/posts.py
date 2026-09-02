@@ -7,6 +7,7 @@ from app.schemas.post_schema import (
     validate_post_data,
     validate_post_update_data,
 )
+from app.services.notifications import add_like_notification
 
 
 posts_bp = Blueprint("posts", __name__)
@@ -169,6 +170,7 @@ def like_post(post_id):
 
     if existing_like is None:
         db.session.add(Like(user_id=user.id, post_id=post.id))
+        add_like_notification(user, post)
         db.session.commit()
 
     return jsonify(

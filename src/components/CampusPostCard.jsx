@@ -162,6 +162,7 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
             await apiRequest(`/api/posts/${post.id}`, {
                 method: "DELETE",
             });
+
             onDeleted?.(post.id);
         } catch (error) {
             console.error("Error deleting post:", error);
@@ -245,7 +246,14 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
 
             applyPostState(data);
 
-            window.dispatchEvent(new Event("unifeed:bookmarks-changed"));
+            window.dispatchEvent(
+                new Event(
+                    data.bookmarked_by_current_user
+                        ? "unifeed:bookmark-added"
+                        : "unifeed:bookmark-removed",
+                ),
+            );
+
         } catch (error) {
             console.error("Error updating bookmark:", error);
 
@@ -410,9 +418,7 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
                                         : "Save campus post"
                                 }
                                 title={
-                                    bookmarked
-                                        ? "Remove bookmark"
-                                        : "Save post"
+                                    bookmarked ? "Remove bookmark" : "Save post"
                                 }
                             >
                                 <Bookmark
@@ -441,9 +447,7 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
                                     disabled={savingEdit}
                                     className="rounded-lg bg-lime-300 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-60"
                                 >
-                                    {savingEdit
-                                        ? "Saving..."
-                                        : "Save changes"}
+                                    {savingEdit ? "Saving..." : "Save changes"}
                                 </button>
 
                                 <button
@@ -646,4 +650,3 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
 }
 
 export default CampusPostCard;
-

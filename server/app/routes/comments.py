@@ -6,6 +6,7 @@ from app.schemas.comment_schema import (
     comment_to_dict,
     validate_comment_data,
 )
+from app.services.notifications import add_comment_notification
 
 
 comments_bp = Blueprint("comments", __name__)
@@ -63,6 +64,7 @@ def create_comment(post_id):
     )
 
     db.session.add(comment)
+    add_comment_notification(user, post)
     db.session.commit()
 
     return jsonify(comment_to_dict(comment)), 201
