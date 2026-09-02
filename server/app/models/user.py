@@ -49,6 +49,18 @@ class User(db.Model):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    notifications_received = db.relationship(
+        "Notification",
+        foreign_keys="Notification.recipient_id",
+        back_populates="recipient",
+        cascade="all, delete-orphan",
+    )
+    notifications_sent = db.relationship(
+        "Notification",
+        foreign_keys="Notification.actor_id",
+        back_populates="actor",
+        cascade="all, delete-orphan",
+    )
 
     def set_password(self, password):
         """Hash and store a user's password."""

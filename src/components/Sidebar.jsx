@@ -24,6 +24,7 @@ function Sidebar() {
     const location = useLocation();
     const [user, setUser] = useState(null);
     const [bookmarkCount, setBookmarkCount] = useState(0);
+    const [notificationCount, setNotificationCount] = useState(0);
 
     useEffect(() => {
         let cancelled = false;
@@ -38,40 +39,73 @@ function Sidebar() {
 
                 if (!currentUser) {
                     setBookmarkCount(0);
+                    setNotificationCount(0);
                     return;
                 }
 
-                const bookmarks = await apiRequest("/api/bookmarks");
+                const [bookmarks, notificationData] = await Promise.all([
+                    apiRequest("/api/bookmarks"),
+                    apiRequest("/api/notifications/unread-count"),
+                ]);
 
-                if (!cancelled) {
-                    setBookmarkCount(bookmarks.length);
-                }
+                if (cancelled) return;
+
+                setBookmarkCount(bookmarks.length);
+                setNotificationCount(notificationData.unread_count ?? 0);
             } catch (error) {
                 if (cancelled) return;
 
-                console.error("Error loading sidebar data:", error);
+                if (error.status !== 401) {
+                    console.error("Error loading sidebar data:", error);
+                }
+
                 setUser(null);
                 setBookmarkCount(0);
+                setNotificationCount(0);
             }
         };
 
-        const handleBookmarksChanged = () => {
+        const handleBookmarkAdded = () => {
+            loadSidebarData();
+        };
+
+        const handleBookmarkRemoved = () => {
+            loadSidebarData();
+        };
+
+        const handleNotificationsUpdated = () => {
             loadSidebarData();
         };
 
         loadSidebarData();
 
+        const refreshInterval = window.setInterval(loadSidebarData, 30 * 1000);
+
+        window.addEventListener("unifeed:bookmark-added", handleBookmarkAdded);
         window.addEventListener(
-            "unifeed:bookmarks-changed",
-            handleBookmarksChanged,
+            "unifeed:bookmark-removed",
+            handleBookmarkRemoved,
+        );
+        window.addEventListener(
+            "unifeed:notifications-updated",
+            handleNotificationsUpdated,
         );
 
         return () => {
             cancelled = true;
+            window.clearInterval(refreshInterval);
 
             window.removeEventListener(
-                "unifeed:bookmarks-changed",
-                handleBookmarksChanged,
+                "unifeed:bookmark-added",
+                handleBookmarkAdded,
+            );
+            window.removeEventListener(
+                "unifeed:bookmark-removed",
+                handleBookmarkRemoved,
+            );
+            window.removeEventListener(
+                "unifeed:notifications-updated",
+                handleNotificationsUpdated,
             );
         };
     }, [location.pathname]);
@@ -81,7 +115,7 @@ function Sidebar() {
             label: "Notifications",
             icon: Bell,
             path: "/notifications",
-            badge: "3",
+            badge: notificationCount > 0 ? String(notificationCount) : null,
         },
         {
             label: "Messages",
@@ -138,6 +172,7 @@ function Sidebar() {
                     <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-lime-300/80">
                         Your space
                     </p>
+
                     <p className="mt-1 text-sm text-slate-500">
                         Stay in the loop
                     </p>
