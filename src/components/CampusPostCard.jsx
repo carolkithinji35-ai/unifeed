@@ -253,7 +253,6 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
                         : "unifeed:bookmark-removed",
                 ),
             );
-
         } catch (error) {
             console.error("Error updating bookmark:", error);
 
@@ -491,20 +490,25 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
                         />
                     )}
 
-                    <div className="mt-5 flex items-center justify-between border-t border-white/8 pt-4 text-xs text-slate-500 sm:justify-start sm:gap-7">
+                    <div className="mt-5 flex items-center justify-between gap-1 border-t border-white/8 pt-4 text-xs text-slate-500 sm:justify-start sm:gap-7">
                         <button
                             type="button"
                             onClick={loadComments}
-                            className={`flex items-center gap-2 transition ${
+                            className={`flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 transition sm:flex-none sm:justify-start sm:gap-2 ${
                                 commentsOpen
                                     ? "text-sky-300"
-                                    : "hover:text-sky-300"
+                                    : "hover:bg-white/[0.04] hover:text-sky-300"
                             }`}
-                            aria-label="Comment on campus post"
+                            aria-label={`View ${commentCount} ${
+                                commentCount === 1 ? "comment" : "comments"
+                            }`}
+                            title="Comments"
                         >
-                            <MessageCircle className="size-4" />
+                            <MessageCircle className="size-4 shrink-0" />
 
-                            <span>
+                            <span className="sm:hidden">{commentCount}</span>
+
+                            <span className="hidden sm:inline">
                                 {commentCount}{" "}
                                 {commentCount === 1 ? "comment" : "comments"}
                             </span>
@@ -514,16 +518,19 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
                             type="button"
                             onClick={handleRepost}
                             disabled={socialActionLoading === "repost"}
-                            className={`flex items-center gap-2 transition ${
+                            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 transition sm:flex-none sm:justify-start sm:gap-2 ${
                                 reposted
                                     ? "text-lime-300"
-                                    : "hover:text-lime-300"
+                                    : "hover:bg-white/[0.04] hover:text-lime-300"
                             } disabled:opacity-50`}
                             aria-label={
-                                reposted ? "Undo repost" : "Repost campus post"
+                                reposted
+                                    ? `Undo repost. ${reposts} reposts`
+                                    : `Repost campus post. ${reposts} reposts`
                             }
+                            title={reposted ? "Undo repost" : "Repost"}
                         >
-                            <Repeat2 className="size-4" />
+                            <Repeat2 className="size-4 shrink-0" />
                             <span>{reposts}</span>
                         </button>
 
@@ -531,17 +538,20 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
                             type="button"
                             onClick={handleLike}
                             disabled={socialActionLoading === "like"}
-                            className={`flex items-center gap-2 transition ${
-                                liked ? "text-rose-400" : "hover:text-rose-400"
+                            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 transition sm:flex-none sm:justify-start sm:gap-2 ${
+                                liked
+                                    ? "text-rose-400"
+                                    : "hover:bg-white/[0.04] hover:text-rose-400"
                             } disabled:opacity-50`}
                             aria-label={
                                 liked
-                                    ? "Unlike campus post"
-                                    : "Like campus post"
+                                    ? `Unlike campus post. ${likes} likes`
+                                    : `Like campus post. ${likes} likes`
                             }
+                            title={liked ? "Unlike" : "Like"}
                         >
                             <Heart
-                                className="size-4"
+                                className="size-4 shrink-0"
                                 fill={liked ? "currentColor" : "none"}
                             />
 
@@ -551,8 +561,9 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
                         <button
                             type="button"
                             onClick={handleShare}
-                            className="ml-auto transition hover:text-sky-300"
+                            className="flex shrink-0 items-center justify-center rounded-lg p-1.5 transition hover:bg-white/[0.04] hover:text-sky-300 sm:ml-auto"
                             aria-label="Share campus post"
+                            title="Share"
                         >
                             <Share2 className="size-4" />
                         </button>

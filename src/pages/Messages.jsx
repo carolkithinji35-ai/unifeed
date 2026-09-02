@@ -34,6 +34,7 @@ function getUserDisplayName(user) {
 
 function Messages() {
     const navigate = useNavigate();
+
     const [users, setUsers] = useState([]);
     const [conversations, setConversations] = useState([]);
     const [selectedConversationId, setSelectedConversationId] = useState(null);
@@ -54,6 +55,14 @@ function Messages() {
         [conversations, selectedConversationId],
     );
 
+    const usersWithConversations = useMemo(() => {
+        const conversationUserIds = new Set(
+            conversations.map((conversation) => conversation.other_user?.id),
+        );
+
+        return users.filter((user) => !conversationUserIds.has(user.id));
+    }, [conversations, users]);
+
     const loadInbox = async () => {
         const [user, availableUsers, conversationData] = await Promise.all([
             getCurrentUser(),
@@ -72,6 +81,7 @@ function Messages() {
             )
         ) {
             setSelectedConversationId(null);
+            setMessages([]);
         }
     };
 
@@ -95,15 +105,17 @@ function Messages() {
                     apiRequest("/api/conversations"),
                 ]);
 
-                if (cancelled) return;
+                if (cancelled) {
+                    return;
+                }
 
                 setCurrentUser(user);
                 setUsers(availableUsers);
                 setConversations(conversationData);
 
-                if (conversationData.length > 0) {
-                    setSelectedConversationId(conversationData[0].id);
-                }
+                // Do not automatically open the first conversation.
+                // The list should be visible first, especially on mobile.
+                setSelectedConversationId(null);
             } catch (requestError) {
                 console.error("Error loading messages:", requestError);
 
@@ -147,7 +159,9 @@ function Messages() {
                     `/api/conversations/${selectedConversationId}/messages`,
                 );
 
-                if (cancelled) return;
+                if (cancelled) {
+                    return;
+                }
 
                 setMessages(data);
 
@@ -162,7 +176,10 @@ function Messages() {
                     setConversations((currentConversations) =>
                         currentConversations.map((conversation) =>
                             conversation.id === selectedConversationId
-                                ? { ...conversation, unread_count: 0 }
+                                ? {
+                                      ...conversation,
+                                      unread_count: 0,
+                                  }
                                 : conversation,
                         ),
                     );
@@ -197,6 +214,18 @@ function Messages() {
         };
     }, [navigate, selectedConversationId]);
 
+    const openConversation = (conversationId) => {
+        setError("");
+        setSelectedConversationId(conversationId);
+    };
+
+    const closeConversation = () => {
+        setSelectedConversationId(null);
+        setMessages([]);
+        setMessageText("");
+        setError("");
+    };
+
     const startConversation = async (userId) => {
         setStartingConversation(true);
         setError("");
@@ -213,7 +242,9 @@ function Messages() {
                 );
 
                 if (existingConversation) {
-                    return currentConversations;
+                    return currentConversations.map((item) =>
+                        item.id === conversation.id ? conversation : item,
+                    );
                 }
 
                 return [conversation, ...currentConversations];
@@ -239,7 +270,9 @@ function Messages() {
     const sendMessage = async (event) => {
         event.preventDefault();
 
-        if (!selectedConversationId || !messageText.trim()) return;
+        if (!selectedConversationId || !messageText.trim()) {
+            return;
+        }
 
         setSending(true);
         setError("");
@@ -285,32 +318,35 @@ function Messages() {
     }
 
     return (
-        <div className="motion-rise space-y-6">
-            <div className="flex items-start gap-4">
-                <button
-                    type="button"
-                    onClick={() => navigate(-1)}
-                    className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.035] text-slate-400 transition hover:border-lime-300/30 hover:text-lime-300"
-                    aria-label="Go back"
-                >
-                    <ArrowLeft className="size-4" />
-                </button>
+        <div className="motion-rise min-w-0 space-y-6">
+            {!selectedConversation && (
+                <div className="flex items-start gap-4">
+                    <button
+                        type="button"
+                        onClick={() => navigate(-1)}
+                        className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.035] text-slate-400 transition hover:border-lime-300/30 hover:text-lime-300"
+                        aria-label="Go back"
+                    >
+                        <ArrowLeft className="size-4" />
+                    </button>
 
-                <div>
-                    <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-lime-300/80">
-                        <MessageCircle className="size-3.5" />
-                        Private conversations
-                    </p>
+                    <div className="min-w-0">
+                        <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-lime-300/80">
+                            <MessageCircle className="size-3.5" />
+                            Private conversations
+                        </p>
 
-                    <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                        Messages
-                    </h1>
+                        <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                            Messages
+                        </h1>
 
-                    <p className="mt-2 text-sm leading-6 text-slate-500">
-                        Have a private conversation with another UniFeed member.
-                    </p>
+                        <p className="mt-2 text-sm leading-6 text-slate-500">
+                            Have a private conversation with another UniFeed
+                            member.
+                        </p>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {error && (
                 <div className="rounded-2xl border border-rose-300/20 bg-rose-300/5 px-4 py-3 text-sm text-rose-200">
@@ -318,15 +354,19 @@ function Messages() {
                 </div>
             )}
 
-            <div className="grid min-h-[560px] overflow-hidden rounded-3xl border border-white/8 bg-white/[0.035] lg:grid-cols-[260px_1fr]">
-                <aside className="border-b border-white/8 lg:border-b-0 lg:border-r">
+            <div className="grid min-h-[560px] min-w-0 overflow-hidden rounded-3xl border border-white/8 bg-white/[0.035] lg:grid-cols-[280px_minmax(0,1fr)]">
+                <aside
+                    className={`min-w-0 border-white/8 lg:border-r ${
+                        selectedConversation ? "hidden lg:block" : "block"
+                    }`}
+                >
                     <div className="border-b border-white/8 p-4">
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                             Conversations
                         </p>
                     </div>
 
-                    <div className="max-h-64 overflow-y-auto lg:max-h-[500px]">
+                    <div className="max-h-[560px] min-w-0 overflow-y-auto">
                         {conversations.length === 0 ? (
                             <p className="p-4 text-sm leading-6 text-slate-600">
                                 No conversations yet. Start one below.
@@ -337,11 +377,9 @@ function Messages() {
                                     key={conversation.id}
                                     type="button"
                                     onClick={() =>
-                                        setSelectedConversationId(
-                                            conversation.id,
-                                        )
+                                        openConversation(conversation.id)
                                     }
-                                    className={`flex w-full items-center gap-3 border-b border-white/5 p-4 text-left transition ${
+                                    className={`flex w-full min-w-0 items-center gap-3 border-b border-white/5 p-4 text-left transition ${
                                         selectedConversationId ===
                                         conversation.id
                                             ? "bg-lime-300/10"
@@ -383,12 +421,12 @@ function Messages() {
                         </p>
 
                         <div className="space-y-2">
-                            {users.length === 0 ? (
+                            {usersWithConversations.length === 0 ? (
                                 <p className="text-xs leading-5 text-slate-600">
-                                    No other members are available yet.
+                                    No new members are available to message.
                                 </p>
                             ) : (
-                                users.map((user) => (
+                                usersWithConversations.map((user) => (
                                     <button
                                         key={user.id}
                                         type="button"
@@ -396,9 +434,10 @@ function Messages() {
                                             startConversation(user.id)
                                         }
                                         disabled={startingConversation}
-                                        className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-sm text-slate-300 transition hover:bg-white/[0.05] hover:text-lime-300 disabled:opacity-50"
+                                        className="flex w-full min-w-0 items-center gap-2 rounded-xl px-2 py-2 text-left text-sm text-slate-300 transition hover:bg-white/[0.05] hover:text-lime-300 disabled:opacity-50"
                                     >
                                         <UserPlus className="size-4 shrink-0" />
+
                                         <span className="truncate">
                                             {getUserDisplayName(user)}
                                         </span>
@@ -409,18 +448,31 @@ function Messages() {
                     </div>
                 </aside>
 
-                <section className="flex min-h-[560px] min-w-0 flex-col">
+                <section
+                    className={`min-w-0 flex-col ${
+                        selectedConversation ? "flex" : "hidden lg:flex"
+                    }`}
+                >
                     {selectedConversation ? (
                         <>
                             <header className="flex items-center gap-3 border-b border-white/8 p-4 sm:p-5">
-                                <span className="grid size-10 place-items-center rounded-xl bg-sky-400/15 text-sm font-bold text-sky-300">
+                                <button
+                                    type="button"
+                                    onClick={closeConversation}
+                                    className="grid size-9 shrink-0 place-items-center rounded-xl border border-white/10 text-slate-400 transition hover:border-lime-300/30 hover:text-lime-300 lg:hidden"
+                                    aria-label="Back to conversations"
+                                >
+                                    <ArrowLeft className="size-4" />
+                                </button>
+
+                                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-sky-400/15 text-sm font-bold text-sky-300">
                                     {selectedConversation.other_user?.username
                                         ?.charAt(0)
                                         .toUpperCase() || "U"}
                                 </span>
 
-                                <div>
-                                    <p className="text-sm font-semibold text-white">
+                                <div className="min-w-0">
+                                    <p className="truncate text-sm font-semibold text-white">
                                         {getUserDisplayName(
                                             selectedConversation.other_user,
                                         )}
@@ -432,90 +484,94 @@ function Messages() {
                                 </div>
                             </header>
 
-                            <div className="flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
-                                {messagesLoading ? (
-                                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                                        <LoaderCircle className="size-4 animate-spin text-lime-300" />
-                                        Loading conversation...
-                                    </div>
-                                ) : messages.length === 0 ? (
-                                    <div className="grid h-full min-h-64 place-items-center text-center text-sm text-slate-600">
-                                        <p>
-                                            No messages yet. Say hello to start
-                                            the conversation.
-                                        </p>
-                                    </div>
-                                ) : (
-                                    messages.map((message) => {
-                                        const isOwnMessage =
-                                            message.sender_id ===
-                                            currentUser?.id;
+                            <div className="flex min-h-0 flex-1 flex-col">
+                                <div className="flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
+                                    {messagesLoading ? (
+                                        <div className="flex items-center gap-2 text-sm text-slate-500">
+                                            <LoaderCircle className="size-4 animate-spin text-lime-300" />
+                                            Loading conversation...
+                                        </div>
+                                    ) : messages.length === 0 ? (
+                                        <div className="grid h-full min-h-64 place-items-center text-center text-sm text-slate-600">
+                                            <p>
+                                                No messages yet. Say hello to
+                                                start the conversation.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        messages.map((message) => {
+                                            const isOwnMessage =
+                                                message.sender_id ===
+                                                currentUser?.id;
 
-                                        return (
-                                            <div
-                                                key={message.id}
-                                                className={`flex ${
-                                                    isOwnMessage
-                                                        ? "justify-end"
-                                                        : "justify-start"
-                                                }`}
-                                            >
+                                            return (
                                                 <div
-                                                    className={`max-w-[82%] rounded-2xl px-4 py-3 ${
+                                                    key={message.id}
+                                                    className={`flex ${
                                                         isOwnMessage
-                                                            ? "bg-lime-300 text-slate-950"
-                                                            : "bg-white/[0.07] text-slate-200"
+                                                            ? "justify-end"
+                                                            : "justify-start"
                                                     }`}
                                                 >
-                                                    <p className="text-sm leading-6">
-                                                        {message.content}
-                                                    </p>
-
-                                                    <p
-                                                        className={`mt-1 text-[10px] ${
+                                                    <div
+                                                        className={`max-w-[82%] rounded-2xl px-4 py-3 ${
                                                             isOwnMessage
-                                                                ? "text-slate-950/60"
-                                                                : "text-slate-500"
+                                                                ? "bg-lime-300 text-slate-950"
+                                                                : "bg-white/[0.07] text-slate-200"
                                                         }`}
                                                     >
-                                                        {formatMessageTime(
-                                                            message.created_at,
-                                                        )}
-                                                    </p>
+                                                        <p className="break-words text-sm leading-6">
+                                                            {message.content}
+                                                        </p>
+
+                                                        <p
+                                                            className={`mt-1 text-[10px] ${
+                                                                isOwnMessage
+                                                                    ? "text-slate-950/60"
+                                                                    : "text-slate-500"
+                                                            }`}
+                                                        >
+                                                            {formatMessageTime(
+                                                                message.created_at,
+                                                            )}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })
-                                )}
-                            </div>
-
-                            <form
-                                onSubmit={sendMessage}
-                                className="flex gap-2 border-t border-white/8 p-4 sm:p-5"
-                            >
-                                <input
-                                    value={messageText}
-                                    onChange={(event) =>
-                                        setMessageText(event.target.value)
-                                    }
-                                    maxLength="2000"
-                                    placeholder="Write a private message..."
-                                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-lime-300/40"
-                                />
-
-                                <button
-                                    type="submit"
-                                    disabled={sending || !messageText.trim()}
-                                    className="grid size-11 shrink-0 place-items-center rounded-xl bg-lime-300 text-slate-950 transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-50"
-                                    aria-label="Send message"
-                                >
-                                    {sending ? (
-                                        <LoaderCircle className="size-4 animate-spin" />
-                                    ) : (
-                                        <Send className="size-4" />
+                                            );
+                                        })
                                     )}
-                                </button>
-                            </form>
+                                </div>
+
+                                <form
+                                    onSubmit={sendMessage}
+                                    className="flex gap-2 border-t border-white/8 p-4 sm:p-5"
+                                >
+                                    <input
+                                        value={messageText}
+                                        onChange={(event) =>
+                                            setMessageText(event.target.value)
+                                        }
+                                        maxLength="2000"
+                                        placeholder="Write a private message..."
+                                        className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-lime-300/40"
+                                    />
+
+                                    <button
+                                        type="submit"
+                                        disabled={
+                                            sending || !messageText.trim()
+                                        }
+                                        className="grid size-11 shrink-0 place-items-center rounded-xl bg-lime-300 text-slate-950 transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                        aria-label="Send message"
+                                    >
+                                        {sending ? (
+                                            <LoaderCircle className="size-4 animate-spin" />
+                                        ) : (
+                                            <Send className="size-4" />
+                                        )}
+                                    </button>
+                                </form>
+                            </div>
                         </>
                     ) : (
                         <div className="grid flex-1 place-items-center px-6 text-center">
@@ -530,7 +586,7 @@ function Messages() {
 
                                 <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">
                                     Select a conversation or choose a member
-                                    from the left to start messaging.
+                                    from the list to start messaging.
                                 </p>
                             </div>
                         </div>
