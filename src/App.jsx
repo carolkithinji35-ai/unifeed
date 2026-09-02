@@ -5,6 +5,7 @@ import {
     Routes,
     useLocation,
 } from "react-router-dom";
+import CreatePost from "./pages/CreatePost";
 import Bookmarks from "./pages/Bookmarks";
 import ForgotPassword from "./pages/ForgotPassword";
 import Explore from "./pages/Explore";
@@ -59,6 +60,7 @@ function App() {
                         element={<FuturePage type="messages" />}
                     />
                     <Route path="/bookmarks" element={<Bookmarks />} />
+                    <Route path="/create-post" element={<CreatePost />} />
                 </Routes>
             </Layout>
         </Router>
