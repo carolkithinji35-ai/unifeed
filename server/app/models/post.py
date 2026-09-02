@@ -4,7 +4,7 @@ from app.extensions import db
 
 
 class Post(db.Model):
-    """post shared in the campus feed."""
+    """A post shared in the campus feed."""
 
     __tablename__ = "posts"
 
@@ -26,6 +26,16 @@ class Post(db.Model):
     author = db.relationship("User", back_populates="posts")
     comments = db.relationship(
         "Comment",
+        back_populates="post",
+        cascade="all, delete-orphan",
+    )
+    likes = db.relationship(
+        "Like",
+        back_populates="post",
+        cascade="all, delete-orphan",
+    )
+    reposts = db.relationship(
+        "Repost",
         back_populates="post",
         cascade="all, delete-orphan",
     )
