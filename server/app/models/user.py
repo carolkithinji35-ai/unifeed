@@ -30,6 +30,16 @@ class User(db.Model):
         back_populates="author",
         cascade="all, delete-orphan",
     )
+    likes = db.relationship(
+        "Like",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    reposts = db.relationship(
+        "Repost",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
     def set_password(self, password):
         """Hash and store a user's password."""
