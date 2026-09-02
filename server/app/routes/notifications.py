@@ -29,6 +29,8 @@ def notification_to_dict(notification):
         message = f"{actor_name} liked your post."
     elif notification.notification_type == "comment":
         message = f"{actor_name} commented on your post."
+    elif notification.notification_type == "follow":
+        message = f"{actor_name} started following you."
     else:
         message = f"{actor_name} interacted with your post."
 
@@ -120,6 +122,7 @@ def mark_all_notifications_read():
         {"is_read": True},
         synchronize_session=False,
     )
+
     db.session.commit()
 
     return jsonify({"message": "All notifications marked as read."}), 200

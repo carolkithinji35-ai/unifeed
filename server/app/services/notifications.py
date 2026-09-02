@@ -39,3 +39,26 @@ def add_comment_notification(actor, post):
             notification_type="comment",
         )
     )
+
+
+def add_follow_notification(actor, followed_user):
+    """Create one unread notification when a user follows another user."""
+    if actor.id == followed_user.id:
+        return
+
+    existing_notification = Notification.query.filter_by(
+        recipient_id=followed_user.id,
+        actor_id=actor.id,
+        notification_type="follow",
+        is_read=False,
+    ).first()
+
+    if existing_notification is None:
+        db.session.add(
+            Notification(
+                recipient_id=followed_user.id,
+                actor_id=actor.id,
+                post_id=None,
+                notification_type="follow",
+            )
+        )
