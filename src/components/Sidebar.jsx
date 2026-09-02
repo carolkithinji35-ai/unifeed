@@ -26,9 +26,14 @@ function Sidebar() {
     const [bookmarkCount, setBookmarkCount] = useState(0);
 
     useEffect(() => {
+        let cancelled = false;
+
         const loadSidebarData = async () => {
             try {
                 const currentUser = await getCurrentUser();
+
+                if (cancelled) return;
+
                 setUser(currentUser);
 
                 if (!currentUser) {
@@ -37,15 +42,38 @@ function Sidebar() {
                 }
 
                 const bookmarks = await apiRequest("/api/bookmarks");
-                setBookmarkCount(bookmarks.length);
+
+                if (!cancelled) {
+                    setBookmarkCount(bookmarks.length);
+                }
             } catch (error) {
+                if (cancelled) return;
+
                 console.error("Error loading sidebar data:", error);
                 setUser(null);
                 setBookmarkCount(0);
             }
         };
 
+        const handleBookmarksChanged = () => {
+            loadSidebarData();
+        };
+
         loadSidebarData();
+
+        window.addEventListener(
+            "unifeed:bookmarks-changed",
+            handleBookmarksChanged,
+        );
+
+        return () => {
+            cancelled = true;
+
+            window.removeEventListener(
+                "unifeed:bookmarks-changed",
+                handleBookmarksChanged,
+            );
+        };
     }, [location.pathname]);
 
     const activityItems = [
@@ -160,6 +188,7 @@ function Sidebar() {
                         <span className="block truncate text-sm font-semibold">
                             {user ? displayName : "Sign in to view profile"}
                         </span>
+
                         <span className="block truncate text-xs text-slate-500">
                             {user ? `@${displayName}` : "No active session"}
                         </span>

@@ -11,6 +11,8 @@ function Bookmarks() {
     const [removingId, setRemovingId] = useState(null);
 
     useEffect(() => {
+        let cancelled = false;
+
         const loadBookmarks = async () => {
             try {
                 const currentUser = await getCurrentUser();
@@ -22,7 +24,9 @@ function Bookmarks() {
 
                 const data = await apiRequest("/api/bookmarks");
 
-                setBookmarks(data);
+                if (!cancelled) {
+                    setBookmarks(data);
+                }
             } catch (requestError) {
                 console.error("Error loading bookmarks:", requestError);
 
@@ -31,16 +35,24 @@ function Bookmarks() {
                     return;
                 }
 
-                setError(
-                    requestError.message ||
-                        "Unable to load your bookmarked posts.",
-                );
+                if (!cancelled) {
+                    setError(
+                        requestError.message ||
+                            "Unable to load your bookmarked posts.",
+                    );
+                }
             } finally {
-                setLoading(false);
+                if (!cancelled) {
+                    setLoading(false);
+                }
             }
         };
 
         loadBookmarks();
+
+        return () => {
+            cancelled = true;
+        };
     }, [navigate]);
 
     const removeBookmark = async (postId) => {
@@ -55,6 +67,8 @@ function Bookmarks() {
             setBookmarks((currentBookmarks) =>
                 currentBookmarks.filter((post) => post.id !== postId),
             );
+
+            window.dispatchEvent(new Event("unifeed:bookmarks-changed"));
         } catch (requestError) {
             console.error("Error removing bookmark:", requestError);
 
@@ -86,9 +100,11 @@ function Bookmarks() {
                 <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-lime-300/80">
                     <Bookmark className="size-3.5" /> Your collection
                 </p>
+
                 <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                     Bookmarks
                 </h1>
+
                 <p className="mt-2 text-sm leading-6 text-slate-500">
                     Keep the posts and campus moments you want to revisit.
                 </p>
@@ -106,9 +122,11 @@ function Bookmarks() {
                         <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-lime-300/10 text-lime-300">
                             <BookmarkX className="size-6" />
                         </div>
+
                         <h2 className="mt-4 font-semibold text-white">
                             Your collection starts here
                         </h2>
+
                         <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">
                             Bookmark a useful post or memorable campus moment
                             and it will appear here.
@@ -136,6 +154,7 @@ function Bookmarks() {
                                                 {post.author?.username ||
                                                     "UniFeed Campus Desk"}
                                             </p>
+
                                             <p className="mt-1 text-xs text-slate-600">
                                                 Saved campus post
                                             </p>
@@ -151,6 +170,7 @@ function Bookmarks() {
                                             aria-label="Remove bookmark"
                                         >
                                             <Trash2 className="size-3.5" />
+
                                             {removingId === post.id
                                                 ? "Removing..."
                                                 : "Remove"}
@@ -165,9 +185,11 @@ function Bookmarks() {
                                         <span>
                                             {post.like_count ?? 0} likes
                                         </span>
+
                                         <span>
                                             {post.repost_count ?? 0} reposts
                                         </span>
+
                                         <span>
                                             {post.comment_count ?? 0} comments
                                         </span>

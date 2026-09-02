@@ -244,6 +244,8 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
             });
 
             applyPostState(data);
+
+            window.dispatchEvent(new Event("unifeed:bookmarks-changed"));
         } catch (error) {
             console.error("Error updating bookmark:", error);
 
@@ -644,3 +646,4 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
 }
 
 export default CampusPostCard;
+
