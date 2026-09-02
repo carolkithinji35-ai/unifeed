@@ -20,12 +20,13 @@ def get_authenticated_user():
 
 def follow_counts(user_id):
     """Return follower and following counts for a user."""
-    followers_count = Follow.query.filter_by(following_id=user_id).count()
-    following_count = Follow.query.filter_by(follower_id=user_id).count()
-
     return {
-        "followers_count": followers_count,
-        "following_count": following_count,
+        "followers_count": Follow.query.filter_by(
+            following_id=user_id,
+        ).count(),
+        "following_count": Follow.query.filter_by(
+            follower_id=user_id,
+        ).count(),
     }
 
 
@@ -80,23 +81,34 @@ def follow_user(user_id):
         following_id=target_user.id,
     ).first()
 
-    if existing_follow is None:
-        db.session.add(
-            Follow(
-                follower_id=current_user.id,
-                following_id=target_user.id,
-            )
-        )
+    if existing_follow is not None:
+        return jsonify(
+            {
+                "is_following": True,
+                "notification_created": False,
+                **follow_counts(target_user.id),
+            }
+        ), 200
 
-        add_follow_notification(current_user, target_user)
-        db.session.commit()
+    new_follow = Follow(
+        follower_id=current_user.id,
+        following_id=target_user.id,
+    )
+
+    db.session.add(new_follow)
+    db.session.flush()
+
+    add_follow_notification(current_user, target_user)
+
+    db.session.commit()
 
     return jsonify(
         {
             "is_following": True,
+            "notification_created": True,
             **follow_counts(target_user.id),
         }
-    ), 200
+    ), 201
 
 
 @follows_bp.delete("/users/<int:user_id>/follow")
