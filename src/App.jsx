@@ -12,6 +12,7 @@ import CreatePost from "./pages/CreatePost";
 import Explore from "./pages/Explore";
 import ForgotPassword from "./pages/ForgotPassword";
 import Feed from "./pages/Feed";
+import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
@@ -58,10 +59,7 @@ function App() {
 
                     <Route path="/notifications" element={<Notifications />} />
 
-                    <Route
-                        path="/messages"
-                        element={<FuturePage type="messages" />}
-                    />
+                    <Route path="/messages" element={<Messages />} />
 
                     <Route path="/bookmarks" element={<Bookmarks />} />
                     <Route path="/create-post" element={<CreatePost />} />

@@ -25,6 +25,7 @@ function Sidebar() {
     const [user, setUser] = useState(null);
     const [bookmarkCount, setBookmarkCount] = useState(0);
     const [notificationCount, setNotificationCount] = useState(0);
+    const [messageCount, setMessageCount] = useState(0);
 
     useEffect(() => {
         let cancelled = false;
@@ -40,18 +41,22 @@ function Sidebar() {
                 if (!currentUser) {
                     setBookmarkCount(0);
                     setNotificationCount(0);
+                    setMessageCount(0);
                     return;
                 }
 
-                const [bookmarks, notificationData] = await Promise.all([
-                    apiRequest("/api/bookmarks"),
-                    apiRequest("/api/notifications/unread-count"),
-                ]);
+                const [bookmarks, notificationData, messageData] =
+                    await Promise.all([
+                        apiRequest("/api/bookmarks"),
+                        apiRequest("/api/notifications/unread-count"),
+                        apiRequest("/api/messages/unread-count"),
+                    ]);
 
                 if (cancelled) return;
 
                 setBookmarkCount(bookmarks.length);
                 setNotificationCount(notificationData.unread_count ?? 0);
+                setMessageCount(messageData.unread_count ?? 0);
             } catch (error) {
                 if (cancelled) return;
 
@@ -62,6 +67,7 @@ function Sidebar() {
                 setUser(null);
                 setBookmarkCount(0);
                 setNotificationCount(0);
+                setMessageCount(0);
             }
         };
 
@@ -77,6 +83,10 @@ function Sidebar() {
             loadSidebarData();
         };
 
+        const handleMessagesUpdated = () => {
+            loadSidebarData();
+        };
+
         loadSidebarData();
 
         const refreshInterval = window.setInterval(loadSidebarData, 30 * 1000);
@@ -89,6 +99,10 @@ function Sidebar() {
         window.addEventListener(
             "unifeed:notifications-updated",
             handleNotificationsUpdated,
+        );
+        window.addEventListener(
+            "unifeed:messages-updated",
+            handleMessagesUpdated,
         );
 
         return () => {
@@ -107,6 +121,10 @@ function Sidebar() {
                 "unifeed:notifications-updated",
                 handleNotificationsUpdated,
             );
+            window.removeEventListener(
+                "unifeed:messages-updated",
+                handleMessagesUpdated,
+            );
         };
     }, [location.pathname]);
 
@@ -121,7 +139,7 @@ function Sidebar() {
             label: "Messages",
             icon: MessageCircle,
             path: "/messages",
-            badge: "2",
+            badge: messageCount > 0 ? String(messageCount) : null,
         },
         {
             label: "Bookmarks",

@@ -61,6 +61,23 @@ class User(db.Model):
         back_populates="actor",
         cascade="all, delete-orphan",
     )
+    conversations_as_user_one = db.relationship(
+        "Conversation",
+        foreign_keys="Conversation.user_one_id",
+        back_populates="user_one",
+        cascade="all, delete-orphan",
+    )
+    conversations_as_user_two = db.relationship(
+        "Conversation",
+        foreign_keys="Conversation.user_two_id",
+        back_populates="user_two",
+        cascade="all, delete-orphan",
+    )
+    messages_sent = db.relationship(
+        "Message",
+        back_populates="sender",
+        cascade="all, delete-orphan",
+    )
 
     def set_password(self, password):
         """Hash and store a user's password."""
