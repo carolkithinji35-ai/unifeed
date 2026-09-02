@@ -1,18 +1,80 @@
 import { Bell, ChevronDown, Search, Sparkles, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getCurrentUser, logoutUser } from "../lib/authApi";
+import { getCurrentUser, logoutUser, apiRequest } from "../lib/authApi";
 
 function Header() {
     const navigate = useNavigate();
+
     const [accountOpen, setAccountOpen] = useState(false);
     const [user, setUser] = useState(null);
+    const [notificationCount, setNotificationCount] = useState(0);
     const [loggingOut, setLoggingOut] = useState(false);
 
     useEffect(() => {
-        getCurrentUser()
-            .then(setUser)
-            .catch(() => setUser(null));
+        let cancelled = false;
+
+        const loadNotificationCount = async () => {
+            try {
+                const currentUser = await getCurrentUser();
+
+                if (cancelled) {
+                    return;
+                }
+
+                setUser(currentUser);
+
+                if (!currentUser) {
+                    setNotificationCount(0);
+                    return;
+                }
+
+                const notificationData = await apiRequest(
+                    "/api/notifications/unread-count",
+                );
+
+                if (!cancelled) {
+                    setNotificationCount(notificationData.unread_count ?? 0);
+                }
+            } catch (error) {
+                if (cancelled) {
+                    return;
+                }
+
+                if (error.status !== 401) {
+                    console.error("Error loading notification count:", error);
+                }
+
+                setUser(null);
+                setNotificationCount(0);
+            }
+        };
+
+        const handleNotificationsUpdated = () => {
+            loadNotificationCount();
+        };
+
+        loadNotificationCount();
+
+        const refreshInterval = window.setInterval(
+            loadNotificationCount,
+            30 * 1000,
+        );
+
+        window.addEventListener(
+            "unifeed:notifications-updated",
+            handleNotificationsUpdated,
+        );
+
+        return () => {
+            cancelled = true;
+            window.clearInterval(refreshInterval);
+
+            window.removeEventListener(
+                "unifeed:notifications-updated",
+                handleNotificationsUpdated,
+            );
+        };
     }, []);
 
     const handleLogout = async () => {
@@ -21,6 +83,7 @@ function Header() {
         try {
             await logoutUser();
             setUser(null);
+            setNotificationCount(0);
             setAccountOpen(false);
             navigate("/signin");
         } catch (error) {
@@ -44,6 +107,7 @@ function Header() {
                     <span className="grid size-10 place-items-center rounded-2xl bg-lime-300 text-lg font-bold text-slate-950 shadow-[0_0_28px_rgba(163,230,53,0.18)]">
                         U
                     </span>
+
                     <span className="logo hidden text-xl font-semibold tracking-tight text-white sm:block">
                         UniFeed
                     </span>
@@ -51,9 +115,11 @@ function Header() {
 
                 <div className="hidden max-w-md flex-1 items-center gap-2 rounded-2xl border border-white/8 bg-white/[0.04] px-4 py-2.5 md:flex">
                     <Search className="size-4 text-slate-500" />
+
                     <span className="text-sm text-slate-500">
                         Search your campus community
                     </span>
+
                     <span className="ml-auto rounded-md border border-white/10 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
                         ⌘ K
                     </span>
@@ -63,10 +129,20 @@ function Header() {
                     <Link
                         to="/notifications"
                         className="relative grid size-10 place-items-center rounded-xl text-slate-400 transition hover:bg-white/7 hover:text-lime-300"
-                        aria-label="Notifications"
+                        aria-label={
+                            notificationCount > 0
+                                ? `${notificationCount} unread notifications`
+                                : "Notifications"
+                        }
                     >
                         <Bell className="size-5" />
-                        <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-lime-300" />
+
+                        {notificationCount > 0 && (
+                            <span
+                                className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-lime-300"
+                                aria-hidden="true"
+                            />
+                        )}
                     </Link>
 
                     <button
@@ -80,7 +156,11 @@ function Header() {
                     <div className="relative">
                         <button
                             onClick={() => setAccountOpen(!accountOpen)}
-                            className={`flex items-center gap-1 rounded-full border p-1 pr-2 transition ${accountOpen ? "border-lime-300/50 bg-lime-300/10" : "border-white/10 bg-white/[0.06] hover:border-white/25"}`}
+                            className={`flex items-center gap-1 rounded-full border p-1 pr-2 transition ${
+                                accountOpen
+                                    ? "border-lime-300/50 bg-lime-300/10"
+                                    : "border-white/10 bg-white/[0.06] hover:border-white/25"
+                            }`}
                             aria-label="Account menu"
                             aria-expanded={accountOpen}
                             type="button"
@@ -92,8 +172,11 @@ function Header() {
                                     <UserRound className="size-4" />
                                 )}
                             </span>
+
                             <ChevronDown
-                                className={`hidden size-3.5 text-slate-500 transition sm:block ${accountOpen ? "rotate-180" : ""}`}
+                                className={`hidden size-3.5 text-slate-500 transition sm:block ${
+                                    accountOpen ? "rotate-180" : ""
+                                }`}
                             />
                         </button>
 
@@ -105,6 +188,7 @@ function Header() {
                                             ? `@${displayName}`
                                             : "Welcome to UniFeed"}
                                     </p>
+
                                     <p className="mt-1 text-xs text-slate-500">
                                         {user
                                             ? "Your campus profile"
@@ -123,6 +207,7 @@ function Header() {
                                         >
                                             Sign in
                                         </Link>
+
                                         <Link
                                             to="/signup"
                                             onClick={() =>
@@ -156,6 +241,7 @@ function Header() {
                                             ? "My profile"
                                             : "Sign in to view your profile"}
                                     </Link>
+
                                     <Link
                                         to="/settings"
                                         onClick={() => setAccountOpen(false)}
