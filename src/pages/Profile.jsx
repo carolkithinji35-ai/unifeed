@@ -25,13 +25,16 @@ function formatPost(post) {
 function Profile() {
     const { id } = useParams();
     const navigate = useNavigate();
+
     const [user, setUser] = useState(null);
+    const [currentUser, setCurrentUser] = useState(null);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [editing, setEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState("");
+
     const [formData, setFormData] = useState({
         first_name: "",
         last_name: "",
@@ -41,42 +44,50 @@ function Profile() {
         location: "",
     });
 
+    const isOwnProfile =
+        currentUser && user
+            ? String(currentUser.id) === String(user.id)
+            : false;
+
     useEffect(() => {
+        let cancelled = false;
+
         const loadProfile = async () => {
             setLoading(true);
             setError("");
 
             try {
-                const currentUser = await getCurrentUser();
+                const viewer = await getCurrentUser();
 
-                if (!currentUser) {
+                if (!viewer) {
                     navigate("/signin");
                     return;
                 }
 
-                if (String(currentUser.id) !== String(id)) {
-                    throw new Error(
-                        "Only your authenticated profile is available right now.",
-                    );
-                }
+                const [profileUser, allPosts] = await Promise.all([
+                    apiRequest(`/api/users/${id}`),
+                    apiRequest("/api/posts"),
+                ]);
 
-                const allPosts = await apiRequest("/api/posts");
-                const ownPosts = allPosts
+                if (cancelled) return;
+
+                const profilePosts = allPosts
                     .filter(
                         (post) =>
-                            String(post.author_id) === String(currentUser.id),
+                            String(post.author_id) === String(profileUser.id),
                     )
                     .map(formatPost);
 
-                setUser(currentUser);
-                setPosts(ownPosts);
+                setCurrentUser(viewer);
+                setUser(profileUser);
+                setPosts(profilePosts);
                 setFormData({
-                    first_name: currentUser.first_name || "",
-                    last_name: currentUser.last_name || "",
-                    username: currentUser.username || "",
-                    email: currentUser.email || "",
-                    bio: currentUser.bio || "",
-                    location: currentUser.location || "",
+                    first_name: profileUser.first_name || "",
+                    last_name: profileUser.last_name || "",
+                    username: profileUser.username || "",
+                    email: profileUser.email || "",
+                    bio: profileUser.bio || "",
+                    location: profileUser.location || "",
                 });
             } catch (requestError) {
                 console.error("Error loading profile:", requestError);
@@ -86,15 +97,23 @@ function Profile() {
                     return;
                 }
 
-                setError(
-                    requestError.message || "Unable to load this profile.",
-                );
+                if (!cancelled) {
+                    setError(
+                        requestError.message || "Unable to load this profile.",
+                    );
+                }
             } finally {
-                setLoading(false);
+                if (!cancelled) {
+                    setLoading(false);
+                }
             }
         };
 
         loadProfile();
+
+        return () => {
+            cancelled = true;
+        };
     }, [id, navigate]);
 
     const initials = useMemo(
@@ -112,6 +131,8 @@ function Profile() {
     };
 
     const startEditing = () => {
+        if (!isOwnProfile) return;
+
         setFormError("");
         setEditing(true);
     };
@@ -131,6 +152,11 @@ function Profile() {
 
     const saveProfile = async (event) => {
         event.preventDefault();
+
+        if (!isOwnProfile) {
+            return;
+        }
+
         setSaving(true);
         setFormError("");
 
@@ -141,6 +167,7 @@ function Profile() {
             });
 
             setUser(updatedUser);
+            setCurrentUser(updatedUser);
             setFormData({
                 first_name: updatedUser.first_name || "",
                 last_name: updatedUser.last_name || "",
@@ -228,12 +255,13 @@ function Profile() {
                         <h1 className="text-2xl font-semibold text-white">
                             {displayName}
                         </h1>
+
                         <p className="mt-1 text-sm text-slate-500">
                             @{user.username}
                         </p>
                     </div>
 
-                    {!editing && (
+                    {isOwnProfile && !editing && (
                         <button
                             type="button"
                             onClick={startEditing}
@@ -245,7 +273,7 @@ function Profile() {
                     )}
                 </div>
 
-                {editing ? (
+                {editing && isOwnProfile ? (
                     <form
                         onSubmit={saveProfile}
                         className="mt-6 space-y-4 rounded-2xl border border-lime-300/15 bg-black/10 p-4 sm:p-5"
@@ -261,6 +289,7 @@ function Profile() {
                                 <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                                     First name
                                 </span>
+
                                 <input
                                     name="first_name"
                                     value={formData.first_name}
@@ -275,6 +304,7 @@ function Profile() {
                                 <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                                     Last name
                                 </span>
+
                                 <input
                                     name="last_name"
                                     value={formData.last_name}
@@ -289,6 +319,7 @@ function Profile() {
                                 <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                                     Username
                                 </span>
+
                                 <input
                                     name="username"
                                     value={formData.username}
@@ -305,6 +336,7 @@ function Profile() {
                                 <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                                     Email
                                 </span>
+
                                 <input
                                     name="email"
                                     type="email"
@@ -322,6 +354,7 @@ function Profile() {
                             <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                                 Location
                             </span>
+
                             <input
                                 name="location"
                                 value={formData.location}
@@ -336,6 +369,7 @@ function Profile() {
                             <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                                 Bio
                             </span>
+
                             <textarea
                                 name="bio"
                                 value={formData.bio}
@@ -380,26 +414,31 @@ function Profile() {
                                 <MapPin className="size-3.5" />
                                 {user.location || "Campus community"}
                             </span>
-                            <span className="flex items-center gap-1.5">
-                                <Mail className="size-3.5" /> {user.email}
+
+                            <span className="flex items-center gap-1.5 break-all">
+                                <Mail className="size-3.5 shrink-0" />
+                                {user.email}
                             </span>
+
                             <span className="flex items-center gap-1.5">
-                                <CalendarDays className="size-3.5" /> Joined
-                                recently
+                                <CalendarDays className="size-3.5" />
+                                Joined recently
                             </span>
                         </div>
                     </>
                 )}
 
-                <div className="mt-6 flex gap-6 text-sm">
+                <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
                     <span>
                         <strong className="text-white">{posts.length}</strong>{" "}
                         <span className="text-slate-500">Posts</span>
                     </span>
+
                     <span>
                         <strong className="text-white">0</strong>{" "}
                         <span className="text-slate-500">Following</span>
                     </span>
+
                     <span>
                         <strong className="text-white">0</strong>{" "}
                         <span className="text-slate-500">Followers</span>
@@ -409,7 +448,7 @@ function Profile() {
 
             <div className="border-t border-white/8 px-5 sm:px-7">
                 <nav
-                    className="flex gap-6 overflow-auto"
+                    className="flex gap-6 overflow-x-auto"
                     aria-label="Profile tabs"
                 >
                     {["Posts", "Replies", "Media", "Likes"].map(
@@ -437,7 +476,7 @@ function Profile() {
                             key={post.id}
                             post={post}
                             index={index}
-                            currentUser={user}
+                            currentUser={currentUser}
                             onUpdated={handlePostUpdated}
                             onDeleted={handlePostDeleted}
                         />
@@ -448,7 +487,10 @@ function Profile() {
                     <div className="mb-3 grid size-12 place-items-center rounded-2xl bg-white/5 text-slate-600">
                         <Globe2 className="size-5" />
                     </div>
-                    No posts yet—your posts will appear here.
+
+                    {isOwnProfile
+                        ? "No posts yet—your posts will appear here."
+                        : "No posts yet."}
                 </div>
             )}
         </div>

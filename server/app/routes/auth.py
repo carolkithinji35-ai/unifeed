@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, request, session
-from sqlalchemy import or_
 
 from app.extensions import db
 from app.models import User
@@ -38,10 +37,12 @@ def register():
     password = data["password"]
 
     existing_username = User.query.filter_by(username=username).first()
+
     if existing_username:
         return jsonify({"error": "Username is already in use."}), 409
 
     existing_email = User.query.filter_by(email=email).first()
+
     if existing_email:
         return jsonify({"error": "Email is already in use."}), 409
 
@@ -99,6 +100,22 @@ def current_user():
     if user is None:
         session.clear()
         return jsonify({"error": "Authentication required."}), 401
+
+    return jsonify(user_to_dict(user)), 200
+
+
+@auth_bp.get("/users/<int:user_id>")
+def get_public_user_profile(user_id):
+    """Return a user's public profile to an authenticated user."""
+    viewer = get_authenticated_user()
+
+    if viewer is None:
+        return jsonify({"error": "Authentication required."}), 401
+
+    user = db.session.get(User, user_id)
+
+    if user is None:
+        return jsonify({"error": "User not found."}), 404
 
     return jsonify(user_to_dict(user)), 200
 
