@@ -69,18 +69,22 @@ h3 {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
+
+/* Very thin, subtle scrollbars for desktop feed and sidebars. */
 .sidebar-scroll {
     scrollbar-width: thin;
-    scrollbar-color: rgba(163, 230, 53, 0.35) transparent;
+    scrollbar-color: rgba(163, 230, 53, 0.22) transparent;
 }
 
 .sidebar-scroll::-webkit-scrollbar {
-    width: 4px;
+    width: 2px;
+    height: 2px;
 }
 
 .sidebar-scroll::-webkit-scrollbar-track {
@@ -88,10 +92,10 @@ h3 {
 }
 
 .sidebar-scroll::-webkit-scrollbar-thumb {
-    background: rgba(163, 230, 53, 0.35);
+    background: rgba(163, 230, 53, 0.22);
     border-radius: 999px;
 }
 
 .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(163, 230, 53, 0.65);
+    background: rgba(163, 230, 53, 0.42);
 }

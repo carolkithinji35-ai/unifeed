@@ -1,7 +1,7 @@
 import { Bell, ChevronDown, Search, Sparkles, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getCurrentUser, logoutUser, apiRequest } from "../lib/authApi";
+import { apiRequest, getCurrentUser, logoutUser } from "../lib/authApi";
 
 function Header() {
     const navigate = useNavigate();
@@ -97,7 +97,7 @@ function Header() {
     const profilePath = user ? `/profile/${user.id}` : "/signin";
 
     return (
-        <header className="sticky top-0 z-30 border-b border-white/8 bg-[#0b0d10]/85 backdrop-blur-xl">
+        <header className="fixed inset-x-0 top-0 z-50 border-b border-white/8 bg-[#0b0d10]/90 backdrop-blur-xl lg:sticky lg:top-0">
             <div className="mx-auto flex h-20 max-w-[1480px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
                 <Link
                     to="/"
