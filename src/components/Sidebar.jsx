@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { getCurrentUser } from "../lib/authApi";
+import { apiRequest, getCurrentUser } from "../lib/authApi";
 
 const primaryItems = [
     { label: "Home", icon: Home, path: "/" },
@@ -20,21 +20,54 @@ const primaryItems = [
     { label: "Communities", icon: UsersRound, path: "/communities" },
 ];
 
-const activityItems = [
-    { label: "Notifications", icon: Bell, path: "/notifications", badge: "3" },
-    { label: "Messages", icon: MessageCircle, path: "/messages", badge: "2" },
-    { label: "Bookmarks", icon: Bookmark, path: "/bookmarks" },
-];
-
 function Sidebar() {
     const location = useLocation();
     const [user, setUser] = useState(null);
+    const [bookmarkCount, setBookmarkCount] = useState(0);
 
     useEffect(() => {
-        getCurrentUser()
-            .then(setUser)
-            .catch(() => setUser(null));
-    }, []);
+        const loadSidebarData = async () => {
+            try {
+                const currentUser = await getCurrentUser();
+                setUser(currentUser);
+
+                if (!currentUser) {
+                    setBookmarkCount(0);
+                    return;
+                }
+
+                const bookmarks = await apiRequest("/api/bookmarks");
+                setBookmarkCount(bookmarks.length);
+            } catch (error) {
+                console.error("Error loading sidebar data:", error);
+                setUser(null);
+                setBookmarkCount(0);
+            }
+        };
+
+        loadSidebarData();
+    }, [location.pathname]);
+
+    const activityItems = [
+        {
+            label: "Notifications",
+            icon: Bell,
+            path: "/notifications",
+            badge: "3",
+        },
+        {
+            label: "Messages",
+            icon: MessageCircle,
+            path: "/messages",
+            badge: "2",
+        },
+        {
+            label: "Bookmarks",
+            icon: Bookmark,
+            path: "/bookmarks",
+            badge: bookmarkCount > 0 ? String(bookmarkCount) : null,
+        },
+    ];
 
     const displayName = user?.username || "UniFeed member";
     const profilePath = user ? `/profile/${user.id}` : "/signin";
@@ -54,6 +87,7 @@ function Sidebar() {
             >
                 <Icon className="size-4.5" strokeWidth={active ? 2.5 : 2} />
                 <span className="flex-1">{label}</span>
+
                 {badge && (
                     <span
                         className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
@@ -89,6 +123,7 @@ function Sidebar() {
                 </nav>
 
                 <div className="my-4 hidden border-t border-white/8 lg:block" />
+
                 <p className="mb-2 hidden px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600 lg:block">
                     Your activity
                 </p>
@@ -120,6 +155,7 @@ function Sidebar() {
                             <UserRound className="size-4" />
                         )}
                     </span>
+
                     <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold">
                             {user ? displayName : "Sign in to view profile"}

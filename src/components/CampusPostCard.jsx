@@ -8,13 +8,61 @@ import {
     Share2,
     Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiRequest } from "../lib/authApi";
 
-function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
+function formatRelativeTime(createdAt) {
+    if (!createdAt) return "Just now";
+
+    const createdTime = new Date(createdAt).getTime();
+
+    if (Number.isNaN(createdTime)) return "Just now";
+
+    const elapsedSeconds = Math.max(
+        0,
+        Math.floor((Date.now() - createdTime) / 1000),
+    );
+
+    if (elapsedSeconds < 60) return "Just now";
+
+    const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+
+    if (elapsedMinutes < 60) {
+        return `${elapsedMinutes}m ago`;
+    }
+
+    const elapsedHours = Math.floor(elapsedMinutes / 60);
+
+    if (elapsedHours < 24) {
+        return `${elapsedHours}h ago`;
+    }
+
+    const elapsedDays = Math.floor(elapsedHours / 24);
+
+    if (elapsedDays < 7) {
+        return `${elapsedDays}d ago`;
+    }
+
+    const elapsedWeeks = Math.floor(elapsedDays / 7);
+
+    if (elapsedWeeks < 4) {
+        return `${elapsedWeeks}w ago`;
+    }
+
+    return new Date(createdAt).toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+    });
+}
+
+function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
     const navigate = useNavigate();
 
+    const [relativeTime, setRelativeTime] = useState(() =>
+        formatRelativeTime(post.created_at),
+    );
     const [liked, setLiked] = useState(Boolean(post.liked_by_current_user));
     const [likes, setLikes] = useState(post.like_count ?? 0);
     const [reposted, setReposted] = useState(
@@ -23,9 +71,6 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
     const [reposts, setReposts] = useState(post.repost_count ?? 0);
     const [bookmarked, setBookmarked] = useState(
         Boolean(post.bookmarked_by_current_user),
-    );
-    const [bookmarkCount, setBookmarkCount] = useState(
-        post.bookmark_count ?? 0,
     );
     const [comments, setComments] = useState([]);
     const [commentCount, setCommentCount] = useState(post.comment_count ?? 0);
@@ -40,13 +85,24 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
     const [savingEdit, setSavingEdit] = useState(false);
     const [socialActionLoading, setSocialActionLoading] = useState("");
 
+    useEffect(() => {
+        const updateRelativeTime = () => {
+            setRelativeTime(formatRelativeTime(post.created_at));
+        };
+
+        updateRelativeTime();
+
+        const intervalId = window.setInterval(updateRelativeTime, 30 * 1000);
+
+        return () => window.clearInterval(intervalId);
+    }, [post.created_at]);
+
     const applyPostState = (data) => {
         setLiked(Boolean(data.liked_by_current_user));
         setLikes(data.like_count ?? 0);
         setReposted(Boolean(data.reposted_by_current_user));
         setReposts(data.repost_count ?? 0);
         setBookmarked(Boolean(data.bookmarked_by_current_user));
-        setBookmarkCount(data.bookmark_count ?? 0);
     };
 
     const handleSaveEdit = async () => {
@@ -300,12 +356,14 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                                     {post.author?.username ??
                                         "UniFeed Campus Desk"}
                                 </span>
+
                                 <span className="rounded-full bg-lime-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-lime-300">
                                     {post.eyebrow || "Campus post"}
                                 </span>
                             </div>
+
                             <p className="mt-1 text-xs text-slate-600">
-                                Community post · {index + 1}h ago
+                                Community post · {relativeTime}
                             </p>
                         </div>
 
@@ -321,6 +379,7 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                                     >
                                         <Edit3 className="size-4" />
                                     </button>
+
                                     <button
                                         type="button"
                                         onClick={handleDelete}
@@ -349,7 +408,9 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                                         : "Save campus post"
                                 }
                                 title={
-                                    bookmarked ? "Remove bookmark" : "Save post"
+                                    bookmarked
+                                        ? "Remove bookmark"
+                                        : "Save post"
                                 }
                             >
                                 <Bookmark
@@ -370,6 +431,7 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                                 rows="3"
                                 className="w-full resize-none rounded-xl border border-lime-300/30 bg-black/20 px-3 py-2 text-sm leading-6 text-white outline-none"
                             />
+
                             <div className="flex gap-2">
                                 <button
                                     type="button"
@@ -377,8 +439,11 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                                     disabled={savingEdit}
                                     className="rounded-lg bg-lime-300 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-60"
                                 >
-                                    {savingEdit ? "Saving..." : "Save changes"}
+                                    {savingEdit
+                                        ? "Saving..."
+                                        : "Save changes"}
                                 </button>
+
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -395,7 +460,7 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                         </div>
                     ) : (
                         <p className="mt-4 text-[15px] leading-7 text-slate-200">
-                            {post.text}
+                            {post.text || post.content}
                         </p>
                     )}
 
@@ -432,6 +497,7 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                             aria-label="Comment on campus post"
                         >
                             <MessageCircle className="size-4" />
+
                             <span>
                                 {commentCount}{" "}
                                 {commentCount === 1 ? "comment" : "comments"}
@@ -472,6 +538,7 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                                 className="size-4"
                                 fill={liked ? "currentColor" : "none"}
                             />
+
                             <span>{likes}</span>
                         </button>
 
@@ -518,9 +585,11 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                                                 {comment.author?.username ||
                                                     "Student"}
                                             </span>
+
                                             <span className="text-slate-500">
                                                 :{" "}
                                             </span>
+
                                             {comment.content}
                                         </p>
 
@@ -556,6 +625,7 @@ function CampusPostCard({ post, index, currentUser, onDeleted, onUpdated }) {
                                     placeholder="Write a comment..."
                                     className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white outline-none placeholder:text-slate-600 focus:border-lime-300/40"
                                 />
+
                                 <button
                                     type="submit"
                                     disabled={commentSubmitting}
