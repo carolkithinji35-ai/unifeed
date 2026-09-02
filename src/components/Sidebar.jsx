@@ -22,6 +22,7 @@ const primaryItems = [
 
 function Sidebar() {
     const location = useLocation();
+
     const [user, setUser] = useState(null);
     const [bookmarkCount, setBookmarkCount] = useState(0);
     const [notificationCount, setNotificationCount] = useState(0);
@@ -34,7 +35,9 @@ function Sidebar() {
             try {
                 const currentUser = await getCurrentUser();
 
-                if (cancelled) return;
+                if (cancelled) {
+                    return;
+                }
 
                 setUser(currentUser);
 
@@ -45,20 +48,55 @@ function Sidebar() {
                     return;
                 }
 
-                const [bookmarks, notificationData, messageData] =
-                    await Promise.all([
-                        apiRequest("/api/bookmarks"),
-                        apiRequest("/api/notifications/unread-count"),
-                        apiRequest("/api/messages/unread-count"),
-                    ]);
+                const results = await Promise.allSettled([
+                    apiRequest("/api/bookmarks"),
+                    apiRequest("/api/notifications/unread-count"),
+                    apiRequest("/api/messages/unread-count"),
+                ]);
 
-                if (cancelled) return;
+                if (cancelled) {
+                    return;
+                }
 
-                setBookmarkCount(bookmarks.length);
-                setNotificationCount(notificationData.unread_count ?? 0);
-                setMessageCount(messageData.unread_count ?? 0);
+                const [bookmarksResult, notificationsResult, messagesResult] =
+                    results;
+
+                if (bookmarksResult.status === "fulfilled") {
+                    setBookmarkCount(
+                        Array.isArray(bookmarksResult.value)
+                            ? bookmarksResult.value.length
+                            : 0,
+                    );
+                } else if (bookmarksResult.reason?.status !== 401) {
+                    console.error(
+                        "Error loading bookmark count:",
+                        bookmarksResult.reason,
+                    );
+                }
+
+                if (notificationsResult.status === "fulfilled") {
+                    setNotificationCount(
+                        notificationsResult.value.unread_count ?? 0,
+                    );
+                } else if (notificationsResult.reason?.status !== 401) {
+                    console.error(
+                        "Error loading notification count:",
+                        notificationsResult.reason,
+                    );
+                }
+
+                if (messagesResult.status === "fulfilled") {
+                    setMessageCount(messagesResult.value.unread_count ?? 0);
+                } else if (messagesResult.reason?.status !== 401) {
+                    console.error(
+                        "Error loading message count:",
+                        messagesResult.reason,
+                    );
+                }
             } catch (error) {
-                if (cancelled) return;
+                if (cancelled) {
+                    return;
+                }
 
                 if (error.status !== 401) {
                     console.error("Error loading sidebar data:", error);
@@ -92,14 +130,17 @@ function Sidebar() {
         const refreshInterval = window.setInterval(loadSidebarData, 30 * 1000);
 
         window.addEventListener("unifeed:bookmark-added", handleBookmarkAdded);
+
         window.addEventListener(
             "unifeed:bookmark-removed",
             handleBookmarkRemoved,
         );
+
         window.addEventListener(
             "unifeed:notifications-updated",
             handleNotificationsUpdated,
         );
+
         window.addEventListener(
             "unifeed:messages-updated",
             handleMessagesUpdated,
@@ -113,14 +154,17 @@ function Sidebar() {
                 "unifeed:bookmark-added",
                 handleBookmarkAdded,
             );
+
             window.removeEventListener(
                 "unifeed:bookmark-removed",
                 handleBookmarkRemoved,
             );
+
             window.removeEventListener(
                 "unifeed:notifications-updated",
                 handleNotificationsUpdated,
             );
+
             window.removeEventListener(
                 "unifeed:messages-updated",
                 handleMessagesUpdated,
@@ -166,6 +210,7 @@ function Sidebar() {
                 }`}
             >
                 <Icon className="size-4.5" strokeWidth={active ? 2.5 : 2} />
+
                 <span className="flex-1">{label}</span>
 
                 {badge && (
@@ -221,7 +266,8 @@ function Sidebar() {
                 to="/create-post"
                 className="mt-6 hidden w-full items-center justify-center gap-2 rounded-2xl bg-lime-300 px-4 py-3 text-sm font-bold text-slate-950 transition hover:bg-lime-200 active:scale-[0.98] lg:flex"
             >
-                <Plus className="size-4" /> Create post
+                <Plus className="size-4" />
+                Create post
             </Link>
 
             <div className="mt-auto hidden border-t border-white/8 pt-5 lg:block">
