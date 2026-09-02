@@ -1,7 +1,6 @@
 import { ChevronDown, Filter, Search, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import CampusPostCard from "../components/CampusPostCard";
-import PostComposer from "../components/PostComposer";
 import { apiRequest, getCurrentUser } from "../lib/authApi";
 
 function Feed() {
@@ -24,6 +23,7 @@ function Feed() {
 
             try {
                 const data = await apiRequest("/api/posts");
+
                 const formattedPosts = data.map((post) => ({
                     ...post,
                     text: post.content,
@@ -47,6 +47,7 @@ function Feed() {
 
     const filteredPosts = posts.filter((post) => {
         const query = searchTerm.toLowerCase();
+
         return post.content.toLowerCase().includes(query);
     });
 
@@ -71,42 +72,37 @@ function Feed() {
         );
     };
 
-    const handlePostCreated = (createdPost) => {
-        const formattedPost = {
-            ...createdPost,
-            text: createdPost.content,
-            eyebrow: "Campus post",
-            tags: [],
-        };
-
-        setPosts((currentPosts) => [formattedPost, ...currentPosts]);
-    };
-
     return (
-        <div className="motion-rise space-y-5">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-                <div>
+        <div className="motion-rise min-w-0 space-y-5">
+            <div className="flex min-w-0 flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                <div className="min-w-0">
                     <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-lime-300/80">
-                        <Sparkles className="size-3.5" /> Community feed
+                        <Sparkles className="size-3.5" />
+                        Community feed
                     </p>
-                    <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+
+                    <h1 className="break-words text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                         Your feed
                     </h1>
+
                     <p className="mt-2 text-sm text-slate-500">
                         What’s happening around your campus.
                     </p>
                 </div>
+
                 <button
-                    className="flex items-center gap-2 self-start rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-slate-300 transition hover:border-lime-300/30 hover:text-lime-300 sm:self-auto"
+                    className="flex shrink-0 items-center gap-2 self-start rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-slate-300 transition hover:border-lime-300/30 hover:text-lime-300 sm:self-auto"
                     type="button"
                 >
-                    <Filter className="size-3.5" /> Curated{" "}
+                    <Filter className="size-3.5" />
+                    Curated
                     <ChevronDown className="size-3.5" />
                 </button>
             </div>
 
-            <div className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.035] px-4 py-3.5 shadow-xl shadow-black/10">
-                <Search className="size-4 text-slate-500" />
+            <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.035] px-4 py-3.5 shadow-xl shadow-black/10">
+                <Search className="size-4 shrink-0 text-slate-500" />
+
                 <input
                     type="text"
                     placeholder="Search campus posts..."
@@ -114,7 +110,8 @@ function Feed() {
                     onChange={(event) => setSearchTerm(event.target.value)}
                     className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-600"
                 />
-                <span className="hidden text-xs text-slate-600 sm:block">
+
+                <span className="hidden shrink-0 text-xs text-slate-600 sm:block">
                     {filteredPosts.length} posts
                 </span>
             </div>
@@ -126,25 +123,23 @@ function Feed() {
                 >
                     For you
                 </button>
+
                 <button
                     className="rounded-lg px-3 py-1.5 text-slate-500 transition hover:bg-white/5 hover:text-white"
                     type="button"
                 >
                     Following
                 </button>
+
                 <span className="ml-auto text-xs text-slate-600">
                     Live updates
                 </span>
             </div>
 
-            <PostComposer
-                onPostCreated={handlePostCreated}
-                currentUser={currentUser}
-            />
-
             {loading && (
                 <div className="grid place-items-center rounded-3xl border border-white/8 bg-white/[0.02] py-20 text-center">
                     <div className="size-8 animate-spin rounded-full border-2 border-lime-300 border-t-transparent" />
+
                     <p className="mt-3 text-sm text-slate-500">
                         Loading your feed...
                     </p>
@@ -158,7 +153,7 @@ function Feed() {
             )}
 
             {!loading && !error && filteredPosts.length > 0 && (
-                <div className="space-y-4">
+                <div className="min-w-0 space-y-4">
                     {filteredPosts.map((post, index) => (
                         <CampusPostCard
                             key={post.id}
