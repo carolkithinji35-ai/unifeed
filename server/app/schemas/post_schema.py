@@ -56,6 +56,7 @@ def post_to_dict(post, current_user_id=None):
         "comment_count": len(post.comments),
         "like_count": len(post.likes),
         "repost_count": len(post.reposts),
+        "bookmark_count": len(post.bookmarks),
         "liked_by_current_user": (
             any(like.user_id == current_user_id for like in post.likes)
             if current_user_id is not None
@@ -63,6 +64,14 @@ def post_to_dict(post, current_user_id=None):
         ),
         "reposted_by_current_user": (
             any(repost.user_id == current_user_id for repost in post.reposts)
+            if current_user_id is not None
+            else False
+        ),
+        "bookmarked_by_current_user": (
+            any(
+                bookmark.user_id == current_user_id
+                for bookmark in post.bookmarks
+            )
             if current_user_id is not None
             else False
         ),

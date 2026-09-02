@@ -40,6 +40,11 @@ class User(db.Model):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    bookmarks = db.relationship(
+        "Bookmark",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
     def set_password(self, password):
         """Hash and store a user's password."""
