@@ -18,6 +18,7 @@ class User(db.Model):
     bio = db.Column(db.Text, nullable=True)
     location = db.Column(db.String(120), nullable=True)
     password_hash = db.Column(db.String(255), nullable=True)
+
     created_at = db.Column(
         db.DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -29,53 +30,76 @@ class User(db.Model):
         back_populates="author",
         cascade="all, delete-orphan",
     )
+
     comments = db.relationship(
         "Comment",
         back_populates="author",
         cascade="all, delete-orphan",
     )
+
     likes = db.relationship(
         "Like",
         back_populates="user",
         cascade="all, delete-orphan",
     )
+
     reposts = db.relationship(
         "Repost",
         back_populates="user",
         cascade="all, delete-orphan",
     )
+
     bookmarks = db.relationship(
         "Bookmark",
         back_populates="user",
         cascade="all, delete-orphan",
     )
+
     notifications_received = db.relationship(
         "Notification",
         foreign_keys="Notification.recipient_id",
         back_populates="recipient",
         cascade="all, delete-orphan",
     )
+
     notifications_sent = db.relationship(
         "Notification",
         foreign_keys="Notification.actor_id",
         back_populates="actor",
         cascade="all, delete-orphan",
     )
+
     conversations_as_user_one = db.relationship(
         "Conversation",
         foreign_keys="Conversation.user_one_id",
         back_populates="user_one",
         cascade="all, delete-orphan",
     )
+
     conversations_as_user_two = db.relationship(
         "Conversation",
         foreign_keys="Conversation.user_two_id",
         back_populates="user_two",
         cascade="all, delete-orphan",
     )
+
     messages_sent = db.relationship(
         "Message",
         back_populates="sender",
+        cascade="all, delete-orphan",
+    )
+
+    following_relationships = db.relationship(
+        "Follow",
+        foreign_keys="Follow.follower_id",
+        back_populates="follower",
+        cascade="all, delete-orphan",
+    )
+
+    follower_relationships = db.relationship(
+        "Follow",
+        foreign_keys="Follow.following_id",
+        back_populates="following",
         cascade="all, delete-orphan",
     )
 

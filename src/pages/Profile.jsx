@@ -6,6 +6,8 @@ import {
     Globe2,
     Mail,
     MapPin,
+    UserCheck,
+    UserPlus,
     X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -31,9 +33,15 @@ function Profile() {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
     const [editing, setEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState("");
+
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followLoading, setFollowLoading] = useState(false);
+    const [followersCount, setFollowersCount] = useState(0);
+    const [followingCount, setFollowingCount] = useState(0);
 
     const [formData, setFormData] = useState({
         first_name: "",
@@ -69,7 +77,9 @@ function Profile() {
                     apiRequest("/api/posts"),
                 ]);
 
-                if (cancelled) return;
+                if (cancelled) {
+                    return;
+                }
 
                 const profilePosts = allPosts
                     .filter(
@@ -78,9 +88,21 @@ function Profile() {
                     )
                     .map(formatPost);
 
+                const followStatus = await apiRequest(
+                    `/api/users/${id}/follow-status`,
+                );
+
+                if (cancelled) {
+                    return;
+                }
+
                 setCurrentUser(viewer);
                 setUser(profileUser);
                 setPosts(profilePosts);
+                setIsFollowing(Boolean(followStatus.is_following));
+                setFollowersCount(followStatus.followers_count || 0);
+                setFollowingCount(followStatus.following_count || 0);
+
                 setFormData({
                     first_name: profileUser.first_name || "",
                     last_name: profileUser.last_name || "",
@@ -131,7 +153,9 @@ function Profile() {
     };
 
     const startEditing = () => {
-        if (!isOwnProfile) return;
+        if (!isOwnProfile) {
+            return;
+        }
 
         setFormError("");
         setEditing(true);
@@ -168,6 +192,7 @@ function Profile() {
 
             setUser(updatedUser);
             setCurrentUser(updatedUser);
+
             setFormData({
                 first_name: updatedUser.first_name || "",
                 last_name: updatedUser.last_name || "",
@@ -176,6 +201,7 @@ function Profile() {
                 bio: updatedUser.bio || "",
                 location: updatedUser.location || "",
             });
+
             setEditing(false);
         } catch (requestError) {
             console.error("Error updating profile:", requestError);
@@ -190,6 +216,53 @@ function Profile() {
             );
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleFollowToggle = async () => {
+        if (isOwnProfile || followLoading) {
+            return;
+        }
+
+        const previousFollowingState = isFollowing;
+        const previousFollowersCount = followersCount;
+
+        setFollowLoading(true);
+        setIsFollowing(!previousFollowingState);
+        setFollowersCount(
+            previousFollowingState
+                ? Math.max(0, previousFollowersCount - 1)
+                : previousFollowersCount + 1,
+        );
+
+        try {
+            const followStatus = await apiRequest(
+                `/api/users/${user.id}/follow`,
+                {
+                    method: previousFollowingState ? "DELETE" : "POST",
+                },
+            );
+
+            setIsFollowing(Boolean(followStatus.is_following));
+            setFollowersCount(followStatus.followers_count || 0);
+            setFollowingCount(followStatus.following_count || 0);
+        } catch (requestError) {
+            console.error("Error changing follow status:", requestError);
+
+            setIsFollowing(previousFollowingState);
+            setFollowersCount(previousFollowersCount);
+
+            if (requestError.status === 401) {
+                navigate("/signin");
+                return;
+            }
+
+            setError(
+                requestError.message ||
+                    "Unable to change the follow status. Please try again.",
+            );
+        } finally {
+            setFollowLoading(false);
         }
     };
 
@@ -261,17 +334,50 @@ function Profile() {
                         </p>
                     </div>
 
-                    {isOwnProfile && !editing && (
-                        <button
-                            type="button"
-                            onClick={startEditing}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-lime-300/20 bg-lime-300/10 px-4 py-2 text-sm font-semibold text-lime-300 transition hover:bg-lime-300/20"
-                        >
-                            <Edit3 className="size-4" />
-                            Edit profile
-                        </button>
-                    )}
+                    <div className="flex flex-wrap gap-2">
+                        {!isOwnProfile && (
+                            <button
+                                type="button"
+                                onClick={handleFollowToggle}
+                                disabled={followLoading}
+                                className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                                    isFollowing
+                                        ? "border border-lime-300/25 bg-lime-300/10 text-lime-300 hover:bg-lime-300/20"
+                                        : "bg-lime-300 text-slate-950 hover:bg-lime-200"
+                                }`}
+                            >
+                                {isFollowing ? (
+                                    <UserCheck className="size-4" />
+                                ) : (
+                                    <UserPlus className="size-4" />
+                                )}
+
+                                {followLoading
+                                    ? "Updating..."
+                                    : isFollowing
+                                      ? "Following"
+                                      : "Follow"}
+                            </button>
+                        )}
+
+                        {isOwnProfile && !editing && (
+                            <button
+                                type="button"
+                                onClick={startEditing}
+                                className="inline-flex items-center justify-center gap-2 rounded-xl border border-lime-300/20 bg-lime-300/10 px-4 py-2 text-sm font-semibold text-lime-300 transition hover:bg-lime-300/20"
+                            >
+                                <Edit3 className="size-4" />
+                                Edit profile
+                            </button>
+                        )}
+                    </div>
                 </div>
+
+                {error && (
+                    <p className="mt-4 rounded-xl border border-rose-300/20 bg-rose-300/5 px-3 py-2 text-sm text-rose-200">
+                        {error}
+                    </p>
+                )}
 
                 {editing && isOwnProfile ? (
                     <form
@@ -435,12 +541,12 @@ function Profile() {
                     </span>
 
                     <span>
-                        <strong className="text-white">0</strong>{" "}
+                        <strong className="text-white">{followingCount}</strong>{" "}
                         <span className="text-slate-500">Following</span>
                     </span>
 
                     <span>
-                        <strong className="text-white">0</strong>{" "}
+                        <strong className="text-white">{followersCount}</strong>{" "}
                         <span className="text-slate-500">Followers</span>
                     </span>
                 </div>
