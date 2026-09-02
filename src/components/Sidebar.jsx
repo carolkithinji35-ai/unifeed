@@ -46,13 +46,21 @@ function Sidebar() {
             <Link
                 key={label}
                 to={path}
-                className={`group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition ${active ? "bg-lime-300 text-slate-950 shadow-[0_8px_30px_rgba(163,230,53,0.12)]" : "text-slate-400 hover:bg-white/6 hover:text-white"}`}
+                className={`group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition ${
+                    active
+                        ? "bg-lime-300 text-slate-950 shadow-[0_8px_30px_rgba(163,230,53,0.12)]"
+                        : "text-slate-400 hover:bg-white/6 hover:text-white"
+                }`}
             >
                 <Icon className="size-4.5" strokeWidth={active ? 2.5 : 2} />
                 <span className="flex-1">{label}</span>
                 {badge && (
                     <span
-                        className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${active ? "bg-slate-950/15 text-slate-950" : "bg-lime-300/15 text-lime-300"}`}
+                        className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                            active
+                                ? "bg-slate-950/15 text-slate-950"
+                                : "bg-lime-300/15 text-lime-300"
+                        }`}
                     >
                         {badge}
                     </span>
@@ -93,12 +101,12 @@ function Sidebar() {
                 </nav>
             </div>
 
-            <button
+            <Link
+                to="/create-post"
                 className="mt-6 hidden w-full items-center justify-center gap-2 rounded-2xl bg-lime-300 px-4 py-3 text-sm font-bold text-slate-950 transition hover:bg-lime-200 active:scale-[0.98] lg:flex"
-                type="button"
             >
                 <Plus className="size-4" /> Create post
-            </button>
+            </Link>
 
             <div className="mt-auto hidden border-t border-white/8 pt-5 lg:block">
                 <Link

@@ -10,7 +10,17 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CampusPostCard from "../components/CampusPostCard";
 import { apiRequest, getCurrentUser } from "../lib/authApi";
+
+function formatPost(post) {
+    return {
+        ...post,
+        text: post.content,
+        eyebrow: "Campus post",
+        tags: [],
+    };
+}
 
 function Profile() {
     const { id } = useParams();
@@ -51,9 +61,12 @@ function Profile() {
                 }
 
                 const allPosts = await apiRequest("/api/posts");
-                const ownPosts = allPosts.filter(
-                    (post) => String(post.author_id) === String(currentUser.id),
-                );
+                const ownPosts = allPosts
+                    .filter(
+                        (post) =>
+                            String(post.author_id) === String(currentUser.id),
+                    )
+                    .map(formatPost);
 
                 setUser(currentUser);
                 setPosts(ownPosts);
@@ -151,6 +164,25 @@ function Profile() {
         } finally {
             setSaving(false);
         }
+    };
+
+    const handlePostUpdated = (updatedPost) => {
+        setPosts((currentPosts) =>
+            currentPosts.map((post) =>
+                post.id === updatedPost.id
+                    ? {
+                          ...formatPost(updatedPost),
+                          text: updatedPost.content,
+                      }
+                    : post,
+            ),
+        );
+    };
+
+    const handlePostDeleted = (postId) => {
+        setPosts((currentPosts) =>
+            currentPosts.filter((post) => post.id !== postId),
+        );
     };
 
     if (loading) {
@@ -400,18 +432,15 @@ function Profile() {
 
             {posts.length > 0 ? (
                 <div className="space-y-3 border-t border-white/8 px-5 py-5 sm:px-7">
-                    {posts.map((post) => (
-                        <article
+                    {posts.map((post, index) => (
+                        <CampusPostCard
                             key={post.id}
-                            className="rounded-2xl border border-white/8 bg-white/[0.025] p-4"
-                        >
-                            <p className="text-sm leading-6 text-slate-200">
-                                {post.content}
-                            </p>
-                            <p className="mt-3 text-xs text-slate-600">
-                                {post.comment_count ?? 0} comments
-                            </p>
-                        </article>
+                            post={post}
+                            index={index}
+                            currentUser={user}
+                            onUpdated={handlePostUpdated}
+                            onDeleted={handlePostDeleted}
+                        />
                     ))}
                 </div>
             ) : (
