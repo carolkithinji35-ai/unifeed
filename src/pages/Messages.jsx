@@ -55,13 +55,20 @@ function Messages() {
         [conversations, selectedConversationId],
     );
 
+    const existingConversations = useMemo(
+        () => conversations.filter((conversation) => !conversation.isDraft),
+        [conversations],
+    );
+
     const usersWithConversations = useMemo(() => {
         const conversationUserIds = new Set(
-            conversations.map((conversation) => conversation.other_user?.id),
+            existingConversations.map(
+                (conversation) => conversation.other_user?.id,
+            ),
         );
 
         return users.filter((user) => !conversationUserIds.has(user.id));
-    }, [conversations, users]);
+    }, [existingConversations, users]);
 
     const loadInbox = async () => {
         const [user, availableUsers, conversationData] = await Promise.all([
@@ -113,8 +120,7 @@ function Messages() {
                 setUsers(availableUsers);
                 setConversations(conversationData);
 
-                // Do not automatically open the first conversation.
-                // The list should be visible first, especially on mobile.
+                // Keep the inbox list visible when the page first opens.
                 setSelectedConversationId(null);
             } catch (requestError) {
                 console.error("Error loading messages:", requestError);
@@ -243,11 +249,22 @@ function Messages() {
 
                 if (existingConversation) {
                     return currentConversations.map((item) =>
-                        item.id === conversation.id ? conversation : item,
+                        item.id === conversation.id
+                            ? {
+                                  ...conversation,
+                                  isDraft: false,
+                              }
+                            : item,
                     );
                 }
 
-                return [conversation, ...currentConversations];
+                return [
+                    ...currentConversations,
+                    {
+                        ...conversation,
+                        isDraft: true,
+                    },
+                ];
             });
 
             setSelectedConversationId(conversation.id);
@@ -291,6 +308,8 @@ function Messages() {
             setMessages((currentMessages) => [...currentMessages, newMessage]);
             setMessageText("");
 
+            // Reloading the inbox removes the temporary draft state and
+            // returns the conversation with its latest message.
             await loadInbox();
         } catch (requestError) {
             console.error("Error sending message:", requestError);
@@ -367,12 +386,12 @@ function Messages() {
                     </div>
 
                     <div className="max-h-[560px] min-w-0 overflow-y-auto">
-                        {conversations.length === 0 ? (
+                        {existingConversations.length === 0 ? (
                             <p className="p-4 text-sm leading-6 text-slate-600">
                                 No conversations yet. Start one below.
                             </p>
                         ) : (
-                            conversations.map((conversation) => (
+                            existingConversations.map((conversation) => (
                                 <button
                                     key={conversation.id}
                                     type="button"
