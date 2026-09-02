@@ -67,32 +67,29 @@ function Sidebar() {
                             ? bookmarksResult.value.length
                             : 0,
                     );
-                } else if (bookmarksResult.reason?.status !== 401) {
-                    console.error(
-                        "Error loading bookmark count:",
-                        bookmarksResult.reason,
-                    );
                 }
 
                 if (notificationsResult.status === "fulfilled") {
                     setNotificationCount(
                         notificationsResult.value.unread_count ?? 0,
                     );
-                } else if (notificationsResult.reason?.status !== 401) {
-                    console.error(
-                        "Error loading notification count:",
-                        notificationsResult.reason,
-                    );
                 }
 
                 if (messagesResult.status === "fulfilled") {
                     setMessageCount(messagesResult.value.unread_count ?? 0);
-                } else if (messagesResult.reason?.status !== 401) {
-                    console.error(
-                        "Error loading message count:",
-                        messagesResult.reason,
-                    );
                 }
+
+                results.forEach((result) => {
+                    if (
+                        result.status === "rejected" &&
+                        result.reason?.status !== 401
+                    ) {
+                        console.error(
+                            "Error loading sidebar item:",
+                            result.reason,
+                        );
+                    }
+                });
             } catch (error) {
                 if (cancelled) {
                     return;
@@ -193,6 +190,39 @@ function Sidebar() {
         },
     ];
 
+    const mobileItems = [
+        {
+            label: "Home",
+            icon: Home,
+            path: "/",
+            badge: null,
+        },
+        {
+            label: "Explore",
+            icon: Compass,
+            path: "/explore",
+            badge: null,
+        },
+        {
+            label: "Notifications",
+            icon: Bell,
+            path: "/notifications",
+            badge: notificationCount > 0 ? String(notificationCount) : null,
+        },
+        {
+            label: "Messages",
+            icon: MessageCircle,
+            path: "/messages",
+            badge: messageCount > 0 ? String(messageCount) : null,
+        },
+        {
+            label: "Bookmarks",
+            icon: Bookmark,
+            path: "/bookmarks",
+            badge: bookmarkCount > 0 ? String(bookmarkCount) : null,
+        },
+    ];
+
     const displayName = user?.username || "UniFeed member";
     const profilePath = user ? `/profile/${user.id}` : "/signin";
 
@@ -228,73 +258,113 @@ function Sidebar() {
         );
     };
 
+    const renderMobileItem = ({ label, icon: Icon, path, badge }) => {
+        const active = location.pathname === path;
+
+        return (
+            <Link
+                key={label}
+                to={path}
+                aria-label={label}
+                className={`relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 transition ${
+                    active
+                        ? "bg-lime-300 text-slate-950"
+                        : "text-slate-500 hover:bg-white/8 hover:text-white"
+                }`}
+            >
+                <Icon className="size-5" strokeWidth={active ? 2.5 : 2} />
+
+                <span className="max-w-full truncate text-[10px] font-semibold">
+                    {label}
+                </span>
+
+                {badge && (
+                    <span className="absolute right-1/2 top-0 min-w-4 translate-x-4 rounded-full bg-rose-400 px-1 text-center text-[9px] font-bold leading-4 text-white">
+                        {badge}
+                    </span>
+                )}
+            </Link>
+        );
+    };
+
     return (
-        <aside className="lg:sticky lg:top-28 lg:flex lg:h-[calc(100vh-9rem)] lg:flex-col">
-            <div className="sidebar-scroll flex items-center justify-between lg:min-h-0 lg:flex-1 lg:block lg:overflow-y-auto">
-                <div className="mb-5 hidden px-3 lg:block">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-lime-300/80">
-                        Your space
+        <>
+            <aside className="hidden lg:sticky lg:top-28 lg:flex lg:h-[calc(100vh-9rem)] lg:flex-col">
+                <div className="sidebar-scroll min-h-0 flex-1 overflow-y-auto">
+                    <div className="mb-5 px-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-lime-300/80">
+                            Your space
+                        </p>
+
+                        <p className="mt-1 text-sm text-slate-500">
+                            Stay in the loop
+                        </p>
+                    </div>
+
+                    <nav className="space-y-1" aria-label="Main navigation">
+                        {primaryItems.map(renderItem)}
+                    </nav>
+
+                    <div className="my-4 border-t border-white/8" />
+
+                    <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                        Your activity
                     </p>
 
-                    <p className="mt-1 text-sm text-slate-500">
-                        Stay in the loop
-                    </p>
+                    <nav className="space-y-1" aria-label="Activity navigation">
+                        {activityItems.map(renderItem)}
+                    </nav>
                 </div>
 
-                <nav
-                    className="flex gap-2 lg:block lg:space-y-1"
-                    aria-label="Main navigation"
-                >
-                    {primaryItems.map(renderItem)}
-                </nav>
-
-                <div className="my-4 hidden border-t border-white/8 lg:block" />
-
-                <p className="mb-2 hidden px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600 lg:block">
-                    Your activity
-                </p>
-
-                <nav
-                    className="hidden gap-2 lg:block lg:space-y-1"
-                    aria-label="Activity navigation"
-                >
-                    {activityItems.map(renderItem)}
-                </nav>
-            </div>
-
-            <Link
-                to="/create-post"
-                className="mt-6 hidden w-full items-center justify-center gap-2 rounded-2xl bg-lime-300 px-4 py-3 text-sm font-bold text-slate-950 transition hover:bg-lime-200 active:scale-[0.98] lg:flex"
-            >
-                <Plus className="size-4" />
-                Create post
-            </Link>
-
-            <div className="mt-auto hidden border-t border-white/8 pt-5 lg:block">
                 <Link
-                    to={profilePath}
-                    className="flex items-center gap-3 rounded-2xl p-2 text-slate-300 transition hover:bg-white/[0.06]"
+                    to="/create-post"
+                    className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-lime-300 px-4 py-3 text-sm font-bold text-slate-950 transition hover:bg-lime-200 active:scale-[0.98]"
                 >
-                    <span className="grid size-9 place-items-center rounded-full bg-slate-800 text-lime-300">
-                        {user?.username ? (
-                            user.username.charAt(0).toUpperCase()
-                        ) : (
-                            <UserRound className="size-4" />
-                        )}
-                    </span>
-
-                    <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold">
-                            {user ? displayName : "Sign in to view profile"}
-                        </span>
-
-                        <span className="block truncate text-xs text-slate-500">
-                            {user ? `@${displayName}` : "No active session"}
-                        </span>
-                    </span>
+                    <Plus className="size-4" />
+                    Create post
                 </Link>
-            </div>
-        </aside>
+
+                <div className="mt-auto border-t border-white/8 pt-5">
+                    <Link
+                        to={profilePath}
+                        className="flex items-center gap-3 rounded-2xl p-2 text-slate-300 transition hover:bg-white/[0.06]"
+                    >
+                        <span className="grid size-9 place-items-center rounded-full bg-slate-800 text-lime-300">
+                            {user?.username ? (
+                                user.username.charAt(0).toUpperCase()
+                            ) : (
+                                <UserRound className="size-4" />
+                            )}
+                        </span>
+
+                        <span className="min-w-0">
+                            <span className="block truncate text-sm font-semibold">
+                                {user ? displayName : "Sign in to view profile"}
+                            </span>
+
+                            <span className="block truncate text-xs text-slate-500">
+                                {user ? `@${displayName}` : "No active session"}
+                            </span>
+                        </span>
+                    </Link>
+                </div>
+            </aside>
+
+            <nav
+                className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-1 border-t border-white/10 bg-[#11151a]/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_35px_rgba(0,0,0,0.35)] backdrop-blur-xl lg:hidden"
+                aria-label="Mobile navigation"
+            >
+                {mobileItems.map(renderMobileItem)}
+
+                <Link
+                    to="/create-post"
+                    aria-label="Create post"
+                    className="grid size-10 shrink-0 place-items-center rounded-xl bg-lime-300 text-slate-950 shadow-[0_0_22px_rgba(163,230,53,0.2)] transition hover:bg-lime-200"
+                >
+                    <Plus className="size-5" />
+                </Link>
+            </nav>
+        </>
     );
 }
 

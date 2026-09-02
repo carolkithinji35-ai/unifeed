@@ -58,25 +58,29 @@ function FuturePage({ type }) {
     const config = pageConfig[type];
 
     return (
-        <div className="motion-rise space-y-6">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-                <div>
+        <div className="motion-rise min-w-0 space-y-6">
+            <div className="flex min-w-0 flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                <div className="min-w-0">
                     <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-lime-300/80">
                         {config.eyebrow}
                     </p>
-                    <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+
+                    <h1 className="break-words text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                         {config.title}
                     </h1>
-                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
+
+                    <p className="mt-2 max-w-xl break-words text-sm leading-6 text-slate-500">
                         {config.description}
                     </p>
                 </div>
+
                 {config.action && (
                     <button
                         type="button"
-                        className="flex items-center justify-center gap-2 self-start rounded-xl bg-lime-300 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-lime-200 active:scale-[0.98] sm:self-auto"
+                        className="flex shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-lime-300 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-lime-200 active:scale-[0.98] sm:self-auto"
                     >
-                        <Plus className="size-4" /> {config.action}
+                        <Plus className="size-4" />
+                        {config.action}
                     </button>
                 )}
             </div>
@@ -92,35 +96,47 @@ function FuturePage({ type }) {
 
 function EventList() {
     return (
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
             {campusEvents.map((event) => (
                 <article
                     key={event.title}
-                    className="group overflow-hidden rounded-3xl border border-white/8 bg-white/[0.035] transition hover:border-lime-300/30 hover:bg-white/[0.055]"
+                    className="group min-w-0 overflow-hidden rounded-3xl border border-white/8 bg-white/[0.035] transition hover:border-lime-300/30 hover:bg-white/[0.055]"
                 >
                     <div
-                        className={`h-2 ${event.tone === "lime" ? "bg-lime-300" : event.tone === "violet" ? "bg-violet-400" : "bg-sky-400"}`}
+                        className={`h-2 ${
+                            event.tone === "lime"
+                                ? "bg-lime-300"
+                                : event.tone === "violet"
+                                  ? "bg-violet-400"
+                                  : "bg-sky-400"
+                        }`}
                     />
-                    <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-6">
+
+                    <div className="flex min-w-0 flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-6">
                         <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-white/6 text-lime-300">
                             <CalendarDays className="size-6" />
                         </div>
+
                         <div className="min-w-0 flex-1">
-                            <h2 className="font-semibold text-white">
+                            <h2 className="break-words font-semibold text-white">
                                 {event.title}
                             </h2>
-                            <p className="mt-1 text-sm text-lime-300/80">
+
+                            <p className="mt-1 break-words text-sm text-lime-300/80">
                                 {event.meta}
                             </p>
-                            <p className="mt-2 text-sm leading-6 text-slate-500">
+
+                            <p className="mt-2 break-words text-sm leading-6 text-slate-500">
                                 {event.detail}
                             </p>
                         </div>
+
                         <button
                             type="button"
-                            className="flex items-center gap-2 self-start rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:border-lime-300/30 hover:text-lime-300 sm:self-auto"
+                            className="flex shrink-0 items-center gap-2 self-start rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:border-lime-300/30 hover:text-lime-300 sm:self-auto"
                         >
-                            View details <ArrowUpRight className="size-3.5" />
+                            View details
+                            <ArrowUpRight className="size-3.5" />
                         </button>
                     </div>
                 </article>
@@ -131,38 +147,44 @@ function EventList() {
 
 function CommunityList() {
     return (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid min-w-0 gap-4 sm:grid-cols-2">
             {communities.map((community) => (
                 <article
                     key={community.name}
-                    className="rounded-3xl border border-white/8 bg-white/[0.035] p-5 transition hover:-translate-y-0.5 hover:border-lime-300/30 hover:bg-white/[0.055]"
+                    className="min-w-0 overflow-hidden rounded-3xl border border-white/8 bg-white/[0.035] p-5 transition hover:-translate-y-0.5 hover:border-lime-300/30 hover:bg-white/[0.055]"
                 >
-                    <div className="flex items-start justify-between">
-                        <div className="grid size-12 place-items-center rounded-2xl bg-lime-300/15 font-semibold text-lime-300">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                        <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-lime-300/15 font-semibold text-lime-300">
                             {community.initials}
                         </div>
+
                         <button
                             type="button"
-                            className="rounded-xl border border-white/10 p-2 text-slate-500 transition hover:text-lime-300"
+                            className="shrink-0 rounded-xl border border-white/10 p-2 text-slate-500 transition hover:text-lime-300"
                             aria-label={`Join ${community.name}`}
                         >
                             <UsersRound className="size-4" />
                         </button>
                     </div>
-                    <h2 className="mt-5 font-semibold text-white">
+
+                    <h2 className="mt-5 min-w-0 break-words font-semibold text-white">
                         {community.name}
                     </h2>
-                    <p className="mt-1 text-xs text-lime-300/80">
+
+                    <p className="mt-1 break-words text-xs text-lime-300/80">
                         {community.members}
                     </p>
-                    <p className="mt-3 text-sm leading-6 text-slate-500">
+
+                    <p className="mt-3 min-w-0 break-words text-sm leading-6 text-slate-500">
                         {community.description}
                     </p>
+
                     <button
                         type="button"
-                        className="mt-5 flex items-center gap-1 text-sm font-semibold text-slate-300 transition hover:text-lime-300"
+                        className="mt-5 inline-flex max-w-full items-center gap-1 break-words text-left text-sm font-semibold text-slate-300 transition hover:text-lime-300"
                     >
-                        Explore community <ChevronRight className="size-4" />
+                        <span className="break-words">Explore community</span>
+                        <ChevronRight className="size-4 shrink-0" />
                     </button>
                 </article>
             ))}
@@ -172,11 +194,11 @@ function CommunityList() {
 
 function NotificationList() {
     return (
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
             {notifications.map((notification) => (
                 <article
                     key={notification.title}
-                    className="flex items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.035] p-4 transition hover:bg-white/[0.055]"
+                    className="flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-white/8 bg-white/[0.035] p-4 transition hover:bg-white/[0.055] sm:gap-4"
                 >
                     <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-lime-300/10 text-lime-300">
                         {notification.type === "like" ? (
@@ -189,15 +211,21 @@ function NotificationList() {
                             <UsersRound className="size-4" />
                         )}
                     </div>
-                    <div className="flex-1">
-                        <p className="text-sm font-semibold text-white">
+
+                    <div className="min-w-0 flex-1">
+                        <p className="break-words text-sm font-semibold text-white">
                             {notification.title}
                         </p>
+
                         <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-                            <Clock3 className="size-3" /> {notification.detail}
+                            <Clock3 className="size-3 shrink-0" />
+                            <span className="truncate">
+                                {notification.detail}
+                            </span>
                         </p>
                     </div>
-                    <span className="size-2 rounded-full bg-lime-300" />
+
+                    <span className="size-2 shrink-0 rounded-full bg-lime-300" />
                 </article>
             ))}
         </div>
@@ -206,28 +234,32 @@ function NotificationList() {
 
 function MessageList() {
     return (
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
             {messages.map((message) => (
                 <Link
                     key={message.name}
                     to="#"
-                    className="flex items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.035] p-4 transition hover:border-lime-300/25 hover:bg-white/[0.055]"
+                    className="flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-white/8 bg-white/[0.035] p-4 transition hover:border-lime-300/25 hover:bg-white/[0.055] sm:gap-4"
                 >
                     <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-sky-400/15 text-sm font-semibold text-sky-300">
                         {message.initials}
                     </div>
+
                     <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-white">
+                        <p className="truncate text-sm font-semibold text-white">
                             {message.name}
                         </p>
+
                         <p className="mt-1 truncate text-sm text-slate-500">
                             {message.preview}
                         </p>
                     </div>
-                    <span className="text-xs text-slate-600">
+
+                    <span className="hidden shrink-0 text-xs text-slate-600 sm:block">
                         {message.time}
                     </span>
-                    <ChevronRight className="size-4 text-slate-600" />
+
+                    <ChevronRight className="size-4 shrink-0 text-slate-600" />
                 </Link>
             ))}
         </div>
@@ -241,9 +273,11 @@ function BookmarkEmpty() {
                 <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-lime-300/10 text-lime-300">
                     <Bookmark className="size-6" />
                 </div>
+
                 <h2 className="mt-4 font-semibold text-white">
                     Your collection starts here
                 </h2>
+
                 <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">
                     Save an inspiring post, useful event, or campus resource and
                     it will appear here.
