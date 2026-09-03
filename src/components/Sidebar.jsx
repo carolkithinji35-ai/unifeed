@@ -204,12 +204,6 @@ function Sidebar() {
             badge: null,
         },
         {
-            label: "Notifications",
-            icon: Bell,
-            path: "/notifications",
-            badge: notificationCount > 0 ? String(notificationCount) : null,
-        },
-        {
             label: "Messages",
             icon: MessageCircle,
             path: "/messages",
@@ -355,15 +349,15 @@ function Sidebar() {
                 aria-label="Mobile navigation"
             >
                 {mobileItems.map(renderMobileItem)}
-
-                <Link
-                    to="/create-post"
-                    aria-label="Create post"
-                    className="grid size-10 shrink-0 place-items-center rounded-xl bg-lime-300 text-slate-950 shadow-[0_0_22px_rgba(163,230,53,0.2)] transition hover:bg-lime-200"
-                >
-                    <Plus className="size-5" />
-                </Link>
             </nav>
+
+            <Link
+                to="/create-post"
+                aria-label="Create post"
+                className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-4 z-50 grid size-12 place-items-center rounded-full bg-lime-300 text-slate-950 shadow-[0_0_28px_rgba(163,230,53,0.3)] transition hover:bg-lime-200 lg:hidden"
+            >
+                <Plus className="size-5" />
+            </Link>
         </>
     );
 }

@@ -108,7 +108,7 @@ function Header() {
                         U
                     </span>
 
-                    <span className="logo hidden text-xl font-semibold tracking-tight text-white sm:block">
+                    <span className="logo block text-base font-semibold tracking-tight text-white sm:text-xl">
                         UniFeed
                     </span>
                 </Link>
