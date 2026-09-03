@@ -14,6 +14,10 @@ UniFeed addresses this fragmentation with a dedicated campus feed and social lay
 
 ![UniFeed application preview](assets/uni-feed-preview.png)
 
+## Project pitch presentation link
+
+[View the project pitch presentation](https://docs.google.com/presentation/d/19WhumVfmfHn5P38kXYOBHChLZuO-Bs80by58WC9q4jw/edit?usp=sharing)
+
 ## Current features
 
 - Campus-first social feed with charcoal and lime-green styling
@@ -140,74 +144,74 @@ Social interactions and communication data are stored in PostgreSQL, allowing ac
 
 ### Authentication
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| POST | `/api/auth/register` | Register a user and start a session |
-| POST | `/api/auth/login` | Authenticate a user and start a session |
-| GET | `/api/auth/me` | Return the current authenticated user |
-| PATCH | `/api/auth/profile` | Update the authenticated user’s profile |
-| POST | `/api/auth/logout` | End the current session |
+| Method | Endpoint             | Purpose                                 |
+| ------ | -------------------- | --------------------------------------- |
+| POST   | `/api/auth/register` | Register a user and start a session     |
+| POST   | `/api/auth/login`    | Authenticate a user and start a session |
+| GET    | `/api/auth/me`       | Return the current authenticated user   |
+| PATCH  | `/api/auth/profile`  | Update the authenticated user’s profile |
+| POST   | `/api/auth/logout`   | End the current session                 |
 
 ### Users and profiles
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/api/users` | List available UniFeed users |
-| GET | `/api/users/<id>` | Retrieve a public user profile and the user’s posts |
-| GET | `/api/users/<id>/follow-status` | Return the current follow status |
-| POST | `/api/users/<id>/follow` | Follow another user |
-| DELETE | `/api/users/<id>/follow` | Unfollow another user |
+| Method | Endpoint                        | Purpose                                             |
+| ------ | ------------------------------- | --------------------------------------------------- |
+| GET    | `/api/users`                    | List available UniFeed users                        |
+| GET    | `/api/users/<id>`               | Retrieve a public user profile and the user’s posts |
+| GET    | `/api/users/<id>/follow-status` | Return the current follow status                    |
+| POST   | `/api/users/<id>/follow`        | Follow another user                                 |
+| DELETE | `/api/users/<id>/follow`        | Unfollow another user                               |
 
 ### Posts
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/api/posts` | List posts, newest first |
-| GET | `/api/posts/<id>` | Retrieve one post |
-| POST | `/api/posts` | Create a post for the authenticated user |
-| PATCH | `/api/posts/<id>` | Update a post owned by the authenticated user |
-| DELETE | `/api/posts/<id>` | Delete a post owned by the authenticated user |
-| POST | `/api/posts/<id>/like` | Like a post |
-| DELETE | `/api/posts/<id>/like` | Remove a like from a post |
-| POST | `/api/posts/<id>/repost` | Repost a post |
-| DELETE | `/api/posts/<id>/repost` | Remove a repost |
-| POST | `/api/posts/<id>/bookmark` | Bookmark a post |
-| DELETE | `/api/posts/<id>/bookmark` | Remove a bookmark |
+| Method | Endpoint                   | Purpose                                       |
+| ------ | -------------------------- | --------------------------------------------- |
+| GET    | `/api/posts`               | List posts, newest first                      |
+| GET    | `/api/posts/<id>`          | Retrieve one post                             |
+| POST   | `/api/posts`               | Create a post for the authenticated user      |
+| PATCH  | `/api/posts/<id>`          | Update a post owned by the authenticated user |
+| DELETE | `/api/posts/<id>`          | Delete a post owned by the authenticated user |
+| POST   | `/api/posts/<id>/like`     | Like a post                                   |
+| DELETE | `/api/posts/<id>/like`     | Remove a like from a post                     |
+| POST   | `/api/posts/<id>/repost`   | Repost a post                                 |
+| DELETE | `/api/posts/<id>/repost`   | Remove a repost                               |
+| POST   | `/api/posts/<id>/bookmark` | Bookmark a post                               |
+| DELETE | `/api/posts/<id>/bookmark` | Remove a bookmark                             |
 
 ### Comments
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/api/posts/<id>/comments` | List comments for a post |
-| POST | `/api/posts/<id>/comments` | Create a comment for the authenticated user |
-| PATCH | `/api/comments/<id>` | Update a comment owned by the authenticated user |
-| DELETE | `/api/comments/<id>` | Delete a comment owned by the authenticated user |
+| Method | Endpoint                   | Purpose                                          |
+| ------ | -------------------------- | ------------------------------------------------ |
+| GET    | `/api/posts/<id>/comments` | List comments for a post                         |
+| POST   | `/api/posts/<id>/comments` | Create a comment for the authenticated user      |
+| PATCH  | `/api/comments/<id>`       | Update a comment owned by the authenticated user |
+| DELETE | `/api/comments/<id>`       | Delete a comment owned by the authenticated user |
 
 ### Notifications
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/api/notifications` | List notifications for the authenticated user |
-| GET | `/api/notifications/unread-count` | Return the unread notification count |
-| POST | `/api/notifications/<id>/read` | Mark one notification as read |
-| POST | `/api/notifications/read-all` | Mark all notifications as read |
+| Method | Endpoint                          | Purpose                                       |
+| ------ | --------------------------------- | --------------------------------------------- |
+| GET    | `/api/notifications`              | List notifications for the authenticated user |
+| GET    | `/api/notifications/unread-count` | Return the unread notification count          |
+| POST   | `/api/notifications/<id>/read`    | Mark one notification as read                 |
+| POST   | `/api/notifications/read-all`     | Mark all notifications as read                |
 
 ### Messaging
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/api/conversations` | List the authenticated user’s conversations |
-| POST | `/api/conversations` | Start or retrieve a conversation with another user |
-| GET | `/api/conversations/<id>/messages` | Retrieve conversation messages |
-| POST | `/api/conversations/<id>/messages` | Send a private message |
-| POST | `/api/conversations/<id>/read` | Mark a conversation’s messages as read |
-| GET | `/api/messages/unread-count` | Return the unread message count |
+| Method | Endpoint                           | Purpose                                            |
+| ------ | ---------------------------------- | -------------------------------------------------- |
+| GET    | `/api/conversations`               | List the authenticated user’s conversations        |
+| POST   | `/api/conversations`               | Start or retrieve a conversation with another user |
+| GET    | `/api/conversations/<id>/messages` | Retrieve conversation messages                     |
+| POST   | `/api/conversations/<id>/messages` | Send a private message                             |
+| POST   | `/api/conversations/<id>/read`     | Mark a conversation’s messages as read             |
+| GET    | `/api/messages/unread-count`       | Return the unread message count                    |
 
 ### Bookmarks
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/api/bookmarks` | List the authenticated user’s bookmarked posts |
+| Method | Endpoint         | Purpose                                        |
+| ------ | ---------------- | ---------------------------------------------- |
+| GET    | `/api/bookmarks` | List the authenticated user’s bookmarked posts |
 
 ## Run locally
 
