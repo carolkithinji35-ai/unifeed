@@ -9,7 +9,7 @@ import {
     Trash2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { apiRequest } from "../lib/authApi";
 
 function formatRelativeTime(createdAt) {
@@ -353,18 +353,38 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
     return (
         <article className="rounded-3xl border border-lime-300/10 bg-[linear-gradient(135deg,rgba(163,230,53,0.06),rgba(255,255,255,0.035)_44%)] p-5 transition hover:border-lime-300/25 hover:bg-white/[0.055] sm:p-6">
             <div className="flex items-start gap-4">
-                <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-lime-300 text-sm font-bold text-slate-950">
-                    {post.author?.username?.charAt(0).toUpperCase() || "U"}
-                </div>
+                {post.author_id ? (
+                    <Link
+                        to={`/profile/${post.author_id}`}
+                        className="grid size-11 shrink-0 place-items-center rounded-2xl bg-lime-300 text-sm font-bold text-slate-950 transition hover:ring-2 hover:ring-lime-300/50"
+                        aria-label={`Open ${post.author?.username || "student"}'s profile`}
+                    >
+                        {post.author?.username?.charAt(0).toUpperCase() || "U"}
+                    </Link>
+                ) : (
+                    <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-lime-300 text-sm font-bold text-slate-950">
+                        {post.author?.username?.charAt(0).toUpperCase() || "U"}
+                    </div>
+                )}
 
                 <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
                         <div>
                             <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-sm font-semibold text-white">
-                                    {post.author?.username ??
-                                        "UniFeed Campus Desk"}
-                                </span>
+                                {post.author_id ? (
+                                    <Link
+                                        to={`/profile/${post.author_id}`}
+                                        className="text-sm font-semibold text-white transition hover:text-lime-300"
+                                    >
+                                        {post.author?.username ||
+                                            "UniFeed Campus Desk"}
+                                    </Link>
+                                ) : (
+                                    <span className="text-sm font-semibold text-white">
+                                        {post.author?.username ??
+                                            "UniFeed Campus Desk"}
+                                    </span>
+                                )}
 
                                 <span className="rounded-full bg-lime-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-lime-300">
                                     {post.eyebrow || "Campus post"}
@@ -598,10 +618,20 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
                                         className="flex items-start justify-between gap-3 rounded-xl bg-white/[0.035] px-3 py-2 text-sm text-slate-300"
                                     >
                                         <p>
-                                            <span className="font-semibold text-lime-300">
-                                                {comment.author?.username ||
-                                                    "Student"}
-                                            </span>
+                                            {comment.author_id ? (
+                                                <Link
+                                                    to={`/profile/${comment.author_id}`}
+                                                    className="font-semibold text-lime-300 transition hover:text-lime-200"
+                                                >
+                                                    {comment.author?.username ||
+                                                        "Student"}
+                                                </Link>
+                                            ) : (
+                                                <span className="font-semibold text-lime-300">
+                                                    {comment.author?.username ||
+                                                        "Student"}
+                                                </span>
+                                            )}
 
                                             <span className="text-slate-500">
                                                 :{" "}

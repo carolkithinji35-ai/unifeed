@@ -6,7 +6,7 @@ import {
     UserPlus,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { apiRequest, getCurrentUser } from "../lib/authApi";
 
 function formatMessageTime(createdAt) {
@@ -33,6 +33,7 @@ function getUserDisplayName(user) {
 }
 
 function Messages() {
+    const location = useLocation();
     const navigate = useNavigate();
 
     const [users, setUsers] = useState([]);
@@ -56,7 +57,10 @@ function Messages() {
     );
 
     const existingConversations = useMemo(
-        () => conversations.filter((conversation) => !conversation.isDraft),
+        () =>
+            conversations.filter((conversation) =>
+                Boolean(conversation.latest_message),
+            ),
         [conversations],
     );
 
@@ -120,8 +124,18 @@ function Messages() {
                 setUsers(availableUsers);
                 setConversations(conversationData);
 
-                // Keep the inbox list visible when the page first opens.
-                setSelectedConversationId(null);
+                const requestedConversationId = location.state?.conversationId;
+                const requestedConversationExists = conversationData.some(
+                    (conversation) =>
+                        String(conversation.id) ===
+                        String(requestedConversationId),
+                );
+
+                setSelectedConversationId(
+                    requestedConversationExists
+                        ? requestedConversationId
+                        : null,
+                );
             } catch (requestError) {
                 console.error("Error loading messages:", requestError);
 
@@ -147,7 +161,7 @@ function Messages() {
         return () => {
             cancelled = true;
         };
-    }, [navigate]);
+    }, [location.state, navigate]);
 
     useEffect(() => {
         if (!selectedConversationId) {
@@ -358,6 +372,7 @@ function Messages() {
                         <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                             Messages
                         </h1>
+
                         <p className="mt-2 text-sm leading-6 text-slate-500">
                             Have a private conversation with another UniFeed
                             member.
@@ -532,18 +547,18 @@ function Messages() {
                                                     }`}
                                                 >
                                                     <div
-                                                        className={`max-w-[78%] rounded-2xl px-3 py-2 ${
+                                                        className={`max-w-[82%] rounded-2xl px-4 py-3 ${
                                                             isOwnMessage
                                                                 ? "bg-lime-300 text-slate-950"
                                                                 : "bg-white/[0.07] text-slate-200"
                                                         }`}
                                                     >
-                                                        <p className="break-words text-sm leading-5">
+                                                        <p className="break-words text-sm leading-6">
                                                             {message.content}
                                                         </p>
 
                                                         <p
-                                                            className={`mt-0.5 text-[10px] ${
+                                                            className={`mt-1 text-[10px] ${
                                                                 isOwnMessage
                                                                     ? "text-slate-950/60"
                                                                     : "text-slate-500"

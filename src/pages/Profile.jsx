@@ -6,6 +6,7 @@ import {
     Globe2,
     Mail,
     MapPin,
+    MessageCircle,
     UserCheck,
     UserPlus,
     X,
@@ -40,6 +41,7 @@ function Profile() {
 
     const [isFollowing, setIsFollowing] = useState(false);
     const [followLoading, setFollowLoading] = useState(false);
+    const [messageLoading, setMessageLoading] = useState(false);
     const [followersCount, setFollowersCount] = useState(0);
     const [followingCount, setFollowingCount] = useState(0);
 
@@ -266,6 +268,40 @@ function Profile() {
         }
     };
 
+    const handleMessage = async () => {
+        if (!user || isOwnProfile || messageLoading) {
+            return;
+        }
+
+        setMessageLoading(true);
+        setError("");
+
+        try {
+            const conversation = await apiRequest("/api/conversations", {
+                method: "POST",
+                body: JSON.stringify({ user_id: user.id }),
+            });
+
+            navigate("/messages", {
+                state: { conversationId: conversation.id },
+            });
+        } catch (requestError) {
+            console.error("Error starting conversation:", requestError);
+
+            if (requestError.status === 401) {
+                navigate("/signin");
+                return;
+            }
+
+            setError(
+                requestError.message ||
+                    "Unable to start this conversation. Please try again.",
+            );
+        } finally {
+            setMessageLoading(false);
+        }
+    };
+
     const handlePostUpdated = (updatedPost) => {
         setPosts((currentPosts) =>
             currentPosts.map((post) =>
@@ -336,28 +372,40 @@ function Profile() {
 
                     <div className="flex flex-wrap gap-2">
                         {!isOwnProfile && (
-                            <button
-                                type="button"
-                                onClick={handleFollowToggle}
-                                disabled={followLoading}
-                                className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                                    isFollowing
-                                        ? "border border-lime-300/25 bg-lime-300/10 text-lime-300 hover:bg-lime-300/20"
-                                        : "bg-lime-300 text-slate-950 hover:bg-lime-200"
-                                }`}
-                            >
-                                {isFollowing ? (
-                                    <UserCheck className="size-4" />
-                                ) : (
-                                    <UserPlus className="size-4" />
-                                )}
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={handleMessage}
+                                    disabled={messageLoading}
+                                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-sm font-semibold text-sky-200 transition hover:bg-sky-300/20 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    <MessageCircle className="size-4" />
+                                    {messageLoading ? "Opening..." : "Message"}
+                                </button>
 
-                                {followLoading
-                                    ? "Updating..."
-                                    : isFollowing
-                                      ? "Following"
-                                      : "Follow"}
-                            </button>
+                                <button
+                                    type="button"
+                                    onClick={handleFollowToggle}
+                                    disabled={followLoading}
+                                    className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                                        isFollowing
+                                            ? "border border-lime-300/25 bg-lime-300/10 text-lime-300 hover:bg-lime-300/20"
+                                            : "bg-lime-300 text-slate-950 hover:bg-lime-200"
+                                    }`}
+                                >
+                                    {isFollowing ? (
+                                        <UserCheck className="size-4" />
+                                    ) : (
+                                        <UserPlus className="size-4" />
+                                    )}
+
+                                    {followLoading
+                                        ? "Updating..."
+                                        : isFollowing
+                                          ? "Following"
+                                          : "Follow"}
+                                </button>
+                            </>
                         )}
 
                         {isOwnProfile && !editing && (
