@@ -358,7 +358,6 @@ function Messages() {
                         <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                             Messages
                         </h1>
-
                         <p className="mt-2 text-sm leading-6 text-slate-500">
                             Have a private conversation with another UniFeed
                             member.
@@ -533,18 +532,18 @@ function Messages() {
                                                     }`}
                                                 >
                                                     <div
-                                                        className={`max-w-[82%] rounded-2xl px-4 py-3 ${
+                                                        className={`max-w-[78%] rounded-2xl px-3 py-2 ${
                                                             isOwnMessage
                                                                 ? "bg-lime-300 text-slate-950"
                                                                 : "bg-white/[0.07] text-slate-200"
                                                         }`}
                                                     >
-                                                        <p className="break-words text-sm leading-6">
+                                                        <p className="break-words text-sm leading-5">
                                                             {message.content}
                                                         </p>
 
                                                         <p
-                                                            className={`mt-1 text-[10px] ${
+                                                            className={`mt-0.5 text-[10px] ${
                                                                 isOwnMessage
                                                                     ? "text-slate-950/60"
                                                                     : "text-slate-500"
