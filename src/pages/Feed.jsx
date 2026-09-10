@@ -1,11 +1,13 @@
-import { ChevronDown, Filter, Search, Sparkles } from "lucide-react";
+import { ChevronDown, Filter, Search, Sparkles, UsersRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import CampusPostCard from "../components/CampusPostCard";
+import MobileFeedCapsules from "../components/MobileFeedCapsules";
 import { apiRequest, getCurrentUser } from "../lib/authApi";
 
 function Feed() {
     const [posts, setPosts] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
+    const [activeView, setActiveView] = useState("posts");
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -46,9 +48,13 @@ function Feed() {
     }, []);
 
     const filteredPosts = posts.filter((post) => {
-        const query = searchTerm.toLowerCase();
+        const query = searchTerm.trim().toLowerCase();
 
-        return post.content.toLowerCase().includes(query);
+        return (
+            !query ||
+            post.content.toLowerCase().includes(query) ||
+            post.author?.username?.toLowerCase().includes(query)
+        );
     });
 
     const handlePostUpdated = (updatedPost) => {
@@ -116,7 +122,12 @@ function Feed() {
                 </span>
             </div>
 
-            <div className="flex items-center gap-2 border-b border-white/8 pb-3 text-sm">
+            <MobileFeedCapsules
+                activeView={activeView}
+                onChange={setActiveView}
+            />
+
+            <div className="hidden items-center gap-2 border-b border-white/8 pb-3 text-sm lg:flex">
                 <button
                     className="rounded-lg bg-lime-300 px-3 py-1.5 font-semibold text-slate-950"
                     type="button"
@@ -136,44 +147,88 @@ function Feed() {
                 </span>
             </div>
 
-            {loading && (
-                <div className="grid place-items-center rounded-3xl border border-white/8 bg-white/[0.02] py-20 text-center">
-                    <div className="size-8 animate-spin rounded-full border-2 border-lime-300 border-t-transparent" />
-
-                    <p className="mt-3 text-sm text-slate-500">
-                        Loading your feed...
-                    </p>
-                </div>
+            {activeView === "posts" && (
+                <PostsView
+                    loading={loading}
+                    error={error}
+                    posts={filteredPosts}
+                    searchTerm={searchTerm}
+                    currentUser={currentUser}
+                    onDeleted={handlePostDeleted}
+                    onUpdated={handlePostUpdated}
+                />
             )}
 
-            {!loading && error && (
-                <div className="rounded-3xl border border-rose-400/20 bg-rose-400/5 py-20 text-center text-sm text-rose-300">
-                    {error}
-                </div>
-            )}
+            {activeView === "following" && <FollowingView />}
+        </div>
+    );
+}
 
-            {!loading && !error && filteredPosts.length > 0 && (
-                <div className="min-w-0 space-y-4">
-                    {filteredPosts.map((post, index) => (
-                        <CampusPostCard
-                            key={post.id}
-                            post={post}
-                            index={index}
-                            currentUser={currentUser}
-                            onDeleted={handlePostDeleted}
-                            onUpdated={handlePostUpdated}
-                        />
-                    ))}
-                </div>
-            )}
+function PostsView({
+    loading,
+    error,
+    posts,
+    searchTerm,
+    currentUser,
+    onDeleted,
+    onUpdated,
+}) {
+    if (loading) {
+        return (
+            <div className="grid place-items-center rounded-3xl border border-white/8 bg-white/[0.02] py-20 text-center">
+                <div className="size-8 animate-spin rounded-full border-2 border-lime-300 border-t-transparent" />
+                <p className="mt-3 text-sm text-slate-500">
+                    Loading your feed...
+                </p>
+            </div>
+        );
+    }
 
-            {!loading && !error && filteredPosts.length === 0 && (
-                <div className="rounded-3xl border border-white/8 bg-white/[0.02] py-20 text-center text-sm text-slate-500">
-                    {searchTerm
-                        ? `No posts found matching “${searchTerm}”`
-                        : "No posts yet. Be the first to start the conversation."}
-                </div>
-            )}
+    if (error) {
+        return (
+            <div className="rounded-3xl border border-rose-400/20 bg-rose-400/5 py-20 text-center text-sm text-rose-300">
+                {error}
+            </div>
+        );
+    }
+
+    if (posts.length === 0) {
+        return (
+            <div className="rounded-3xl border border-white/8 bg-white/[0.02] py-20 text-center text-sm text-slate-500">
+                {searchTerm
+                    ? `No posts found matching “${searchTerm}”`
+                    : "No posts yet. Be the first to start the conversation."}
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-w-0 space-y-4">
+            {posts.map((post, index) => (
+                <CampusPostCard
+                    key={post.id}
+                    post={post}
+                    index={index}
+                    currentUser={currentUser}
+                    onDeleted={onDeleted}
+                    onUpdated={onUpdated}
+                />
+            ))}
+        </div>
+    );
+}
+
+function FollowingView() {
+    return (
+        <div className="rounded-3xl border border-white/8 bg-white/[0.02] px-6 py-16 text-center">
+            <UsersRound className="mx-auto size-8 text-lime-300/70" />
+            <h2 className="mt-4 text-lg font-semibold text-white">
+                Your following feed
+            </h2>
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">
+                Posts from people you follow will appear here when the following
+                feed endpoint is connected.
+            </p>
         </div>
     );
 }

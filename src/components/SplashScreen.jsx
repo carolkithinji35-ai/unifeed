@@ -8,7 +8,7 @@ function SplashScreen({ onFinish }) {
 
     return (
         <main className="grid min-h-screen place-items-center bg-[#0b0d0f]">
-            <div className="grid size-24 place-items-center rounded-[2rem] bg-lime-300 text-5xl font-black text-[#0b0d0f]">
+            <div className="grid size-24 place-items-center rounded-4xl bg-lime-300 text-5xl font-black text-[#0b0d0f]">
                 U
             </div>
         </main>

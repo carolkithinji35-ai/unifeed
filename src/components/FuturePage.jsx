@@ -1,4 +1,5 @@
 import {
+    ArrowLeft,
     ArrowUpRight,
     Bookmark,
     CalendarDays,
@@ -8,7 +9,7 @@ import {
     Plus,
     UsersRound,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
     campusEvents,
     communities,
@@ -56,11 +57,21 @@ const pageConfig = {
 
 function FuturePage({ type }) {
     const config = pageConfig[type];
+    const navigate = useNavigate();
 
     return (
         <div className="motion-rise min-w-0 space-y-6">
             <div className="flex min-w-0 flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div className="min-w-0">
+                    <button
+                        type="button"
+                        onClick={() => navigate(-1)}
+                        className="mb-4 inline-flex items-center gap-2 text-xs font-semibold text-slate-500 transition hover:text-lime-300"
+                    >
+                        <ArrowLeft className="size-3.5" />
+                        Back
+                    </button>
+
                     <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-lime-300/80">
                         {config.eyebrow}
                     </p>
