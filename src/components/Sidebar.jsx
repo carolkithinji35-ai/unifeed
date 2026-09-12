@@ -18,6 +18,7 @@ const primaryItems = [
     { label: "Explore", icon: Compass, path: "/explore" },
     { label: "Events", icon: CalendarDays, path: "/events" },
     { label: "Communities", icon: UsersRound, path: "/communities" },
+    { label: "Groups", icon: UserRound, path: "/groups" },
 ];
 
 function Sidebar() {
@@ -214,6 +215,12 @@ function Sidebar() {
             icon: Bookmark,
             path: "/bookmarks",
             badge: bookmarkCount > 0 ? String(bookmarkCount) : null,
+        },
+        {
+            label: "Groups",
+            icon: UserRound,
+            path: "/groups",
+            badge: null,
         },
     ];
 

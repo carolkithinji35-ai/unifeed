@@ -2,6 +2,7 @@ from app.models.bookmark import Bookmark
 from app.models.comment import Comment
 from app.models.conversation import Conversation
 from app.models.follow import Follow
+from app.models.group import Group, GroupMember
 from app.models.like import Like
 from app.models.message import Message
 from app.models.notification import Notification
@@ -14,6 +15,8 @@ __all__ = [
     "Comment",
     "Conversation",
     "Follow",
+    "Group",
+    "GroupMember",
     "Like",
     "Message",
     "Notification",
