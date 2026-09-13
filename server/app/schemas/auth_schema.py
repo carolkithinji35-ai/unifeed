@@ -136,5 +136,7 @@ def user_to_dict(user):
         "email": user.email,
         "bio": user.bio,
         "location": user.location,
+        "student_id": user.student_id,
+        "role": user.role,
         "created_at": user.created_at.isoformat(),
     }
