@@ -31,6 +31,9 @@ def notification_to_dict(notification):
         message = f"{actor_name} commented on your post."
     elif notification.notification_type == "follow":
         message = f"{actor_name} started following you."
+    elif notification.notification_type == "group_message":
+        group_title = notification.group.title if notification.group else "your group"
+        message = f"{actor_name} sent a new message in {group_title}."
     else:
         message = f"{actor_name} interacted with your post."
 
@@ -45,6 +48,7 @@ def notification_to_dict(notification):
         if notification.actor is not None
         else None,
         "post_id": notification.post_id,
+        "group_id": notification.group_id,
         "is_read": notification.is_read,
         "created_at": notification.created_at.isoformat(),
     }

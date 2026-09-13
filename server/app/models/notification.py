@@ -25,6 +25,11 @@ class Notification(db.Model):
         db.ForeignKey("posts.id"),
         nullable=True,
     )
+    group_id = db.Column(
+        db.Integer,
+        db.ForeignKey("groups.id", ondelete="CASCADE"),
+        nullable=True,
+    )
 
     notification_type = db.Column(db.String(30), nullable=False)
     is_read = db.Column(db.Boolean, nullable=False, default=False)
@@ -45,6 +50,7 @@ class Notification(db.Model):
         back_populates="notifications_sent",
     )
     post = db.relationship("Post", back_populates="notifications")
+    group = db.relationship("Group")
 
     def __repr__(self):
         return (

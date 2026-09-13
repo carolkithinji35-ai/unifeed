@@ -25,6 +25,17 @@ class Group(db.Model):
         back_populates="group",
         cascade="all, delete-orphan",
     )
+    invites = db.relationship(
+        "GroupInvite",
+        back_populates="group",
+        cascade="all, delete-orphan",
+    )
+    messages = db.relationship(
+        "GroupMessage",
+        back_populates="group",
+        cascade="all, delete-orphan",
+        order_by="GroupMessage.created_at.asc()",
+    )
 
 
 class GroupMember(db.Model):
@@ -47,6 +58,10 @@ class GroupMember(db.Model):
         db.DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
+    )
+    last_read_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=True,
     )
 
     group = db.relationship("Group", back_populates="members")

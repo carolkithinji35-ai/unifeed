@@ -1,6 +1,9 @@
 import {
     ArrowLeft,
     Check,
+    Copy,
+    MessageCircle,
+    Link2,
     Plus,
     Shield,
     Trash2,
@@ -11,6 +14,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiRequest, getCurrentUser } from "../lib/authApi";
+import GroupChat from "../components/GroupChat";
 
 function displayName(user) {
     if (!user) return "UniFeed member";
@@ -44,6 +48,9 @@ function Groups() {
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [form, setForm] = useState({ title: "", description: "" });
     const [selectedUserId, setSelectedUserId] = useState("");
+    const [inviteLink, setInviteLink] = useState("");
+    const [inviteSaving, setInviteSaving] = useState(false);
+    const [inviteCopied, setInviteCopied] = useState(false);
 
     const loadGroups = async () => {
         const [user, groupData, availableUsers] = await Promise.all([
@@ -102,7 +109,23 @@ function Groups() {
 
         try {
             const group = await apiRequest(`/api/groups/${groupId}`);
-            setSelectedGroup(group);
+
+            if (group.unread_count > 0) {
+                await apiRequest(`/api/groups/${groupId}/messages/read`, {
+                    method: "PATCH",
+                });
+                window.dispatchEvent(
+                    new Event("unifeed:notifications-updated"),
+                );
+            }
+
+            const readGroup = { ...group, unread_count: 0 };
+            setGroups((currentGroups) =>
+                currentGroups.map((currentGroup) =>
+                    currentGroup.id === groupId ? readGroup : currentGroup,
+                ),
+            );
+            setSelectedGroup(readGroup);
         } catch (requestError) {
             setError(requestError.message || "Unable to load this group.");
         } finally {
@@ -185,6 +208,38 @@ function Groups() {
             setError(requestError.message || "Unable to remove this member.");
         } finally {
             setMemberSaving(false);
+        }
+    };
+
+    const handleGenerateInvite = async () => {
+        if (!selectedGroup || inviteSaving) return;
+
+        setInviteSaving(true);
+        setInviteCopied(false);
+        setError("");
+
+        try {
+            const invite = await apiRequest(
+                `/api/groups/${selectedGroup.id}/invites`,
+                { method: "POST" },
+            );
+            setInviteLink(
+                `${window.location.origin}/group-invite/${invite.token}`,
+            );
+        } catch (requestError) {
+            setError(requestError.message || "Unable to create invite link.");
+        } finally {
+            setInviteSaving(false);
+        }
+    };
+
+    const handleCopyInvite = async () => {
+        if (!inviteLink) return;
+        try {
+            await navigator.clipboard.writeText(inviteLink);
+            setInviteCopied(true);
+        } catch {
+            setError("Copy failed. Select the link and copy it manually.");
         }
     };
 
@@ -326,9 +381,16 @@ function Groups() {
                                     <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-lime-300/15 font-semibold text-lime-300">
                                         {initials(group.title)}
                                     </span>
-                                    <span className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold text-slate-400">
-                                        Invite-only
-                                    </span>
+                                    <div className="flex flex-wrap items-center justify-end gap-2">
+                                        {group.unread_count > 0 && (
+                                            <span className="rounded-full bg-lime-300 px-2.5 py-1 text-[11px] font-bold text-slate-950">
+                                                {group.unread_count} unread
+                                            </span>
+                                        )}
+                                        <span className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold text-slate-400">
+                                            Invite-only
+                                        </span>
+                                    </div>
                                 </div>
                                 <h2 className="mt-4 break-words font-semibold text-white">
                                     {group.title}
@@ -419,6 +481,55 @@ function Groups() {
                                     </div>
                                 )}
 
+                                {selectedGroup.is_admin && (
+                                    <div className="mt-5 rounded-2xl border border-lime-300/15 bg-lime-300/[0.04] p-4">
+                                        <div className="flex flex-wrap items-center justify-between gap-3">
+                                            <div>
+                                                <p className="flex items-center gap-2 text-sm font-semibold text-white">
+                                                    <MessageCircle className="size-4 text-lime-300" />
+                                                    Invite people privately
+                                                </p>
+                                                <p className="mt-1 text-xs leading-5 text-slate-500">
+                                                    Links expire after 7 days
+                                                    and can be revoked from the
+                                                    server.
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={handleGenerateInvite}
+                                                disabled={inviteSaving}
+                                                className="inline-flex items-center gap-2 rounded-xl bg-lime-300 px-3 py-2 text-xs font-bold text-slate-950 disabled:opacity-60"
+                                            >
+                                                <Link2 className="size-3.5" />
+                                                {inviteSaving
+                                                    ? "Generating..."
+                                                    : "Generate link"}
+                                            </button>
+                                        </div>
+                                        {inviteLink && (
+                                            <div className="mt-3 flex min-w-0 gap-2">
+                                                <input
+                                                    value={inviteLink}
+                                                    readOnly
+                                                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-slate-300 outline-none"
+                                                    aria-label="Group invite link"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleCopyInvite}
+                                                    className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-300 hover:border-lime-300/40 hover:text-lime-300"
+                                                >
+                                                    <Copy className="size-3.5" />
+                                                    {inviteCopied
+                                                        ? "Copied"
+                                                        : "Copy"}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 <div className="mt-5 space-y-2">
                                     {selectedGroup.members?.map((member) => {
                                         const isCreator =
@@ -464,6 +575,8 @@ function Groups() {
                                         );
                                     })}
                                 </div>
+
+                                <GroupChat groupId={selectedGroup.id} />
                             </>
                         ) : (
                             <div className="grid min-h-64 place-items-center text-center">
