@@ -14,6 +14,7 @@ import { apiRequest, getCurrentUser } from "../lib/authApi";
 
 const exploreCapsules = [
     { id: "people", label: "People", icon: UserRound },
+    { id: "groups", label: "Groups", icon: UsersRound },
     { id: "events", label: "Events", icon: CalendarDays },
     { id: "communities", label: "Communities", icon: UsersRound },
 ];
@@ -114,29 +115,35 @@ function Explore() {
             </div>
 
             <nav
-                className="sidebar-scroll -mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 lg:hidden"
+                className="sidebar-scroll -mx-1 min-w-0 max-w-full overflow-x-auto overscroll-x-contain px-1 pb-2 touch-pan-x lg:hidden"
                 aria-label="Explore sections"
             >
-                {exploreCapsules.map(({ id, label, icon: Icon }) => {
-                    const active = activeView === id;
+                <div className="flex w-max min-w-full flex-nowrap snap-x snap-mandatory gap-2">
+                    {exploreCapsules.map(({ id, label, icon: Icon }) => {
+                        const active = activeView === id;
 
-                    return (
-                        <button
-                            key={id}
-                            type="button"
-                            onClick={() => setActiveView(id)}
-                            aria-current={active ? "page" : undefined}
-                            className={`inline-flex min-w-max snap-start items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-semibold transition active:scale-[0.98] ${
-                                active
-                                    ? "border-lime-300 bg-lime-300 text-slate-950 shadow-[0_8px_24px_rgba(163,230,53,0.16)]"
-                                    : "border-white/10 bg-white/[0.045] text-slate-400 hover:border-lime-300/30 hover:text-white"
-                            }`}
-                        >
-                            <Icon className="size-3.5" strokeWidth={2.2} />
-                            {label}
-                        </button>
-                    );
-                })}
+                        return (
+                            <button
+                                key={id}
+                                type="button"
+                                onClick={() =>
+                                    id === "groups"
+                                        ? navigate("/groups")
+                                        : setActiveView(id)
+                                }
+                                aria-current={active ? "page" : undefined}
+                                className={`inline-flex shrink-0 min-w-max snap-start items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-semibold transition active:scale-[0.98] ${
+                                    active
+                                        ? "border-lime-300 bg-lime-300 text-slate-950 shadow-[0_8px_24px_rgba(163,230,53,0.16)]"
+                                        : "border-white/10 bg-white/[0.045] text-slate-400 hover:border-lime-300/30 hover:text-white"
+                                }`}
+                            >
+                                <Icon className="size-3.5" strokeWidth={2.2} />
+                                {label}
+                            </button>
+                        );
+                    })}
+                </div>
             </nav>
 
             {activeView === "people" && (

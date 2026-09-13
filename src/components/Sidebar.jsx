@@ -216,12 +216,6 @@ function Sidebar() {
             path: "/bookmarks",
             badge: bookmarkCount > 0 ? String(bookmarkCount) : null,
         },
-        {
-            label: "Groups",
-            icon: UserRound,
-            path: "/groups",
-            badge: null,
-        },
     ];
 
     const displayName = user?.username || "UniFeed member";
