@@ -12,6 +12,7 @@ import Bookmarks from "./pages/Bookmarks";
 import CreatePost from "./pages/CreatePost";
 import Explore from "./pages/Explore";
 import ForgotPassword from "./pages/ForgotPassword";
+import Groups from "./pages/Groups";
 import Feed from "./pages/Feed";
 import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
@@ -56,6 +57,7 @@ function AppContent() {
                     path="/communities"
                     element={<FuturePage type="communities" />}
                 />
+                <Route path="/groups" element={<Groups />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/bookmarks" element={<Bookmarks />} />
