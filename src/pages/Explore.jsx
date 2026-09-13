@@ -288,7 +288,7 @@ function EventsView() {
                                 <p className="mt-1 break-words text-sm text-lime-300/80">
                                     {event.meta}
                                 </p>
-                                <p className="mt-2 break-words text-sm leading-6 text-slate-500">
+                                <p className="mt-2 wrap-break-word text-sm leading-6 text-slate-500">
                                     {event.detail}
                                 </p>
                             </div>
@@ -324,7 +324,7 @@ function CommunitiesView() {
                 {communities.map((community) => (
                     <article
                         key={community.name}
-                        className="min-w-0 overflow-hidden rounded-3xl border border-white/8 bg-white/[0.035] p-5 transition hover:border-lime-300/30 hover:bg-white/[0.055]"
+                        className="min-w-0 overflow-hidden rounded-3xl border border-white/8 bg-white/[0.035] p-5 transition hover:border-lime-300/30 hover:bg-white/5.5"
                     >
                         <div className="flex min-w-0 items-start justify-between gap-3">
                             <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-lime-300/15 font-semibold text-lime-300">
@@ -334,13 +334,13 @@ function CommunitiesView() {
                             <UsersRound className="size-5 shrink-0 text-lime-300/70" />
                         </div>
 
-                        <h2 className="mt-5 min-w-0 break-words font-semibold text-white">
+                        <h2 className="mt-5 min-w-0 wrap-break-word font-semibold text-white">
                             {community.name}
                         </h2>
-                        <p className="mt-1 break-words text-xs text-lime-300/80">
+                        <p className="mt-1 wrap-break-word text-xs text-lime-300/80">
                             {community.members}
                         </p>
-                        <p className="mt-3 min-w-0 break-words text-sm leading-6 text-slate-500">
+                        <p className="mt-3 min-w-0 wrap-break-word text-sm leading-6 text-slate-500">
                             {community.description}
                         </p>
 

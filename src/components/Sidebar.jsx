@@ -322,7 +322,7 @@ function Sidebar() {
                 <div className="mt-auto border-t border-white/8 pt-5">
                     <Link
                         to={profilePath}
-                        className="flex items-center gap-3 rounded-2xl p-2 text-slate-300 transition hover:bg-white/[0.06]"
+                        className="flex items-center gap-3 rounded-2xl p-2 text-slate-300 transition hover:bg-white/6"
                     >
                         <span className="grid size-9 place-items-center rounded-full bg-slate-800 text-lime-300">
                             {user?.username ? (
