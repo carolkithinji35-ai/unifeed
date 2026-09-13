@@ -29,13 +29,17 @@ function SignIn() {
         setLoading(true);
 
         try {
-            await loginUser({
+            const loggedInUser = await loginUser({
                 identifier: form.identifier.trim(),
                 password: form.password,
             });
 
-            // Reload after login so Feed reads the new Flask session cookie.
-            window.location.assign("/");
+            // Reload after login so the Flask session cookie is available.
+            window.location.assign(
+                loggedInUser.role === "university_admin"
+                    ? "/university-dashboard"
+                    : "/",
+            );
         } catch (requestError) {
             setError(
                 requestError.message.includes("Failed to fetch")

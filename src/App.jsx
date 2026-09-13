@@ -21,6 +21,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import UniversityDashboard from "./pages/UniversityDashboard";
 
 function ScrollToTop() {
     const { pathname } = useLocation();
@@ -32,17 +33,7 @@ function ScrollToTop() {
     return null;
 }
 
-function AppContent() {
-    const [showSplash, setShowSplash] = useState(true);
-
-    const finishSplash = useCallback(() => {
-        setShowSplash(false);
-    }, []);
-
-    if (showSplash) {
-        return <SplashScreen onFinish={finishSplash} />;
-    }
-
+function StudentRoutes() {
     return (
         <Layout>
             <Routes>
@@ -66,6 +57,28 @@ function AppContent() {
                 <Route path="/create-post" element={<CreatePost />} />
             </Routes>
         </Layout>
+    );
+}
+
+function AppContent() {
+    const [showSplash, setShowSplash] = useState(true);
+
+    const finishSplash = useCallback(() => {
+        setShowSplash(false);
+    }, []);
+
+    if (showSplash) {
+        return <SplashScreen onFinish={finishSplash} />;
+    }
+
+    return (
+        <Routes>
+            <Route
+                path="/university-dashboard"
+                element={<UniversityDashboard />}
+            />
+            <Route path="*" element={<StudentRoutes />} />
+        </Routes>
     );
 }
 
