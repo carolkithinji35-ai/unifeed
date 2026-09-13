@@ -12,7 +12,7 @@ import {
     X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { apiRequest, getCurrentUser } from "../lib/authApi";
 import GroupChat from "../components/GroupChat";
 
@@ -35,6 +35,7 @@ function initials(value) {
 
 function Groups() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [currentUser, setCurrentUser] = useState(null);
     const [groups, setGroups] = useState([]);
     const [users, setUsers] = useState([]);
@@ -132,6 +133,18 @@ function Groups() {
             setDetailLoading(false);
         }
     };
+
+    useEffect(() => {
+        const openGroupId = location.state?.openGroupId;
+        if (!openGroupId || groups.length === 0) return undefined;
+
+        const timer = window.setTimeout(() => {
+            openGroup(Number(openGroupId));
+            navigate(location.pathname, { replace: true, state: {} });
+        }, 0);
+
+        return () => window.clearTimeout(timer);
+    }, [groups, location.pathname, location.state, navigate]);
 
     const updateGroupInLists = (updatedGroup) => {
         setGroups((currentGroups) =>

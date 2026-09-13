@@ -168,6 +168,18 @@ function Notifications() {
         }
     };
 
+    const handleNotificationClick = async (notification) => {
+        if (!notification.is_read) {
+            await markAsRead(notification.id);
+        }
+
+        if (notification.type === "group_message" && notification.group_id) {
+            navigate("/groups", {
+                state: { openGroupId: notification.group_id },
+            });
+        }
+    };
+
     const markAllAsRead = async () => {
         if (unreadCount === 0) {
             return;
@@ -272,10 +284,36 @@ function Notifications() {
                     {notifications.map((notification) => (
                         <article
                             key={notification.id}
+                            onClick={() =>
+                                handleNotificationClick(notification)
+                            }
+                            onKeyDown={(event) => {
+                                if (
+                                    event.key === "Enter" ||
+                                    event.key === " "
+                                ) {
+                                    event.preventDefault();
+                                    handleNotificationClick(notification);
+                                }
+                            }}
+                            role={
+                                notification.type === "group_message"
+                                    ? "button"
+                                    : undefined
+                            }
+                            tabIndex={
+                                notification.type === "group_message"
+                                    ? 0
+                                    : undefined
+                            }
                             className={`flex items-start gap-4 rounded-2xl border p-4 transition ${
                                 notification.is_read
                                     ? "border-white/8 bg-white/[0.025]"
                                     : "border-lime-300/20 bg-lime-300/[0.06]"
+                            } ${
+                                notification.type === "group_message"
+                                    ? "cursor-pointer hover:border-lime-300/30"
+                                    : ""
                             }`}
                         >
                             <div
@@ -301,7 +339,10 @@ function Notifications() {
                             {!notification.is_read && (
                                 <button
                                     type="button"
-                                    onClick={() => markAsRead(notification.id)}
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        markAsRead(notification.id);
+                                    }}
                                     disabled={markingId === notification.id}
                                     className="shrink-0 rounded-lg border border-lime-300/20 px-2.5 py-1.5 text-[11px] font-semibold text-lime-300 transition hover:bg-lime-300/10 disabled:opacity-50"
                                 >
