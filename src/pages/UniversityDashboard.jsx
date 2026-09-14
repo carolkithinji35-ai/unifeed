@@ -41,7 +41,7 @@ function Metric({ icon: Icon, label, value, tone = "lime", note }) {
               : "text-lime-300";
 
     return (
-        <div className="border border-white/10 bg-[#111820] p-5">
+        <div className="rounded-2xl border border-white/10 bg-[#111820] p-5">
             <div className="flex items-center justify-between gap-3">
                 <span className="text-sm text-slate-400">{label}</span>
                 <Icon className={`size-5 ${iconTone}`} />
@@ -121,36 +121,79 @@ export default function UniversityDashboard() {
     const [studentSearch, setStudentSearch] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(true);
+    const [lastUpdated, setLastUpdated] = useState(null);
 
     useEffect(() => {
-        if (loading || !user || user.role !== "university_admin") return;
+        if (loading || !user || user.role !== "university_admin") {
+            return undefined;
+        }
 
         let cancelled = false;
-        Promise.all([
-            apiRequest("/api/admin/summary"),
-            apiRequest("/api/admin/students"),
-        ])
-            .then(([summary, studentData]) => {
+
+        const loadDashboard = async () => {
+            try {
+                const [summary, studentData] = await Promise.all([
+                    apiRequest("/api/admin/summary"),
+                    apiRequest("/api/admin/students"),
+                ]);
+
                 if (cancelled) return;
+
                 setDashboard(summary);
                 setStudents(studentData.students || []);
-            })
-            .catch((requestError) => {
+                setLastUpdated(new Date());
+                setError("");
+            } catch (requestError) {
                 if (!cancelled) {
                     setError(
                         requestError.message ||
                             "Unable to load the university dashboard.",
                     );
                 }
-            })
-            .finally(() => {
+            } finally {
                 if (!cancelled) setIsLoading(false);
-            });
+            }
+        };
+
+        loadDashboard();
+        const refreshInterval = window.setInterval(loadDashboard, 30_000);
 
         return () => {
             cancelled = true;
+            window.clearInterval(refreshInterval);
         };
     }, [loading, user]);
+
+    useEffect(() => {
+        if (loading || !user || user.role !== "university_admin") {
+            return undefined;
+        }
+
+        let cancelled = false;
+        const timer = window.setTimeout(async () => {
+            try {
+                const data = await apiRequest(
+                    `/api/admin/students?search=${encodeURIComponent(studentSearch.trim())}`,
+                );
+
+                if (!cancelled) {
+                    setStudents(data.students || []);
+                    setError("");
+                }
+            } catch (requestError) {
+                if (!cancelled) {
+                    setError(
+                        requestError.message || "Unable to search students.",
+                    );
+                }
+            }
+        }, 300);
+
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timer);
+        };
+    }, [loading, studentSearch, user]);
 
     const handleLogout = async () => {
         await logoutUser();
@@ -211,9 +254,16 @@ export default function UniversityDashboard() {
                                 safe, and support a positive student experience.
                             </p>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-slate-400">
-                            <ShieldCheck className="size-4 text-lime-300" />
-                            Campus Administration
+                        <div className="flex flex-col items-start gap-1 text-xs text-slate-400 sm:items-end">
+                            <div className="flex items-center gap-2">
+                                <ShieldCheck className="size-4 text-lime-300" />
+                                Campus Administration
+                            </div>
+                            <span className="text-[11px] text-slate-600">
+                                {lastUpdated
+                                    ? `Live · updated ${lastUpdated.toLocaleTimeString()}`
+                                    : "Loading live data..."}
+                            </span>
                         </div>
                     </header>
 
@@ -252,15 +302,15 @@ export default function UniversityDashboard() {
                     </section>
 
                     <section className="mt-6 grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-                        <div className="border border-white/10 bg-[#111820] p-5 sm:p-6">
+                        <div className="rounded-2xl border border-white/10 bg-[#111820] p-5 sm:p-6">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
                                     <h2 className="text-xl font-bold text-white">
                                         Student directory
                                     </h2>
                                     <p className="mt-1 text-sm text-slate-500">
-                                        Search by institutional student ID,
-                                        username, or email.
+                                        Search by institutional student ID or
+                                        student name.
                                     </p>
                                 </div>
                                 <UsersRound className="size-5 text-lime-300" />
@@ -269,20 +319,20 @@ export default function UniversityDashboard() {
                                 onSubmit={searchStudents}
                                 className="mt-5 flex gap-2"
                             >
-                                <label className="flex min-w-0 flex-1 items-center gap-2 border border-white/10 bg-white/[0.03] px-3 py-2.5">
+                                <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
                                     <Search className="size-4 text-slate-500" />
                                     <input
                                         value={studentSearch}
                                         onChange={(event) =>
                                             setStudentSearch(event.target.value)
                                         }
-                                        placeholder="Search student ID..."
+                                        placeholder="Search by student ID or name..."
                                         className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-600"
                                     />
                                 </label>
                                 <button
                                     type="submit"
-                                    className="bg-lime-300 px-4 text-sm font-bold text-slate-950"
+                                    className="rounded-xl bg-lime-300 px-4 text-sm font-bold text-slate-950"
                                 >
                                     Search
                                 </button>
@@ -323,7 +373,7 @@ export default function UniversityDashboard() {
                             </div>
                         </div>
 
-                        <div className="border border-white/10 bg-[#111820] p-5 sm:p-6">
+                        <div className="rounded-2xl border border-white/10 bg-[#111820] p-5 sm:p-6">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
                                     <h2 className="text-xl font-bold text-white">
@@ -367,7 +417,7 @@ export default function UniversityDashboard() {
                         </div>
                     </section>
 
-                    <section className="mt-6 border border-white/10 bg-[#111820] p-5 sm:p-6">
+                    <section className="mt-6 rounded-2xl border border-white/10 bg-[#111820] p-5 sm:p-6">
                         <div className="flex items-center gap-3">
                             <ShieldCheck className="size-6 text-lime-300" />
                             <div>
