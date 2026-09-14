@@ -4,7 +4,9 @@ import {
     Route,
     Routes,
     useLocation,
+    useNavigate,
 } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 import FuturePage from "./components/FuturePage";
 import Layout from "./components/Layout";
 import SplashScreen from "./components/SplashScreen";
@@ -62,6 +64,19 @@ function StudentRoutes() {
 
 function AppContent() {
     const [showSplash, setShowSplash] = useState(true);
+    const { user, loading } = useAuth();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (
+            !loading &&
+            user?.role === "university_admin" &&
+            location.pathname === "/"
+        ) {
+            navigate("/university-dashboard", { replace: true });
+        }
+    }, [loading, location.pathname, navigate, user?.role]);
 
     const finishSplash = useCallback(() => {
         setShowSplash(false);
