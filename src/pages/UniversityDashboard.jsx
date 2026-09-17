@@ -59,8 +59,6 @@ function AdminSidebar({ onLogout }) {
         ["Overview", LayoutDashboard],
         ["Reports", AlertTriangle],
         ["Students", UsersRound],
-        ["Groups", Group],
-        ["Analytics", BarChart3],
         ["Settings", Settings],
     ];
 
