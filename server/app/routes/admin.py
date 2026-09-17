@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, request, session
 from sqlalchemy import func, or_
 
 from app.extensions import db
-from app.models import Comment, Group, GroupMember, Post, User
+from app.models import Comment, Group, GroupMember, Post, Report, User
 
 
 admin_bp = Blueprint("admin", __name__)
@@ -24,6 +24,27 @@ def require_university_admin():
     if user.role != "university_admin":
         return None, (jsonify({"error": "University administrator access required."}), 403)
     return user, None
+
+
+def serialize_report(report):
+    target = report.post or report.comment
+    content = target.content if target is not None else "Content unavailable"
+    content_type = "Post" if report.post_id else "Comment"
+
+    return {
+        "id": report.id,
+        "reason": report.reason,
+        "status": report.status,
+        "content_type": content_type,
+        "content_id": report.post_id or report.comment_id,
+        "content": content,
+        "reported_account": {
+            "id": report.reported_user.id,
+            "student_id": report.reported_user.student_id,
+            "username": report.reported_user.username,
+        },
+        "created_at": report.created_at.isoformat(),
+    }
 
 
 def serialize_student(user):
@@ -68,7 +89,11 @@ def dashboard_summary():
     ).count()
     posts_today = Post.query.filter(Post.created_at >= today_start).count()
     comments_today = Comment.query.filter(
-        Comment.created_at >= today_start).count()
+        Comment.created_at >= today_start
+    ).count()
+    pending_reports = Report.query.filter_by(status="pending").count()
+    recent_reports = Report.query.order_by(
+        Report.created_at.desc()).limit(8).all()
 
     return jsonify(
         {
@@ -76,7 +101,7 @@ def dashboard_summary():
                 "registered_students": registered_students,
                 "students_with_id": students_with_id,
                 "active_today": posts_today + comments_today,
-                "pending_reports": 0,
+                "pending_reports": pending_reports,
                 "total_posts": Post.query.count(),
                 "total_comments": Comment.query.count(),
                 "total_groups": Group.query.count(),
@@ -86,12 +111,13 @@ def dashboard_summary():
                 "posts_today": posts_today,
                 "comments_today": comments_today,
             },
-            "reports": [],
+            "reports": [serialize_report(report) for report in recent_reports],
             "privacy": {
                 "private_posts_included": False,
                 "group_messages_included": False,
-                "reports_available": False,
-                "message": "No private feeds or Group messages are exposed in this overview.",
+                "reporters_included": False,
+                "reports_available": True,
+                "message": "Reported content and its owner are shown; reporter identities are never exposed.",
             },
         }
     ), 200

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, session
 
 from app.extensions import db
-from app.models import Comment, Post, User
+from app.models import Comment, Post, Report, User
 from app.schemas.comment_schema import (
     comment_to_dict,
     validate_comment_data,
@@ -68,6 +68,49 @@ def create_comment(post_id):
     db.session.commit()
 
     return jsonify(comment_to_dict(comment)), 201
+
+
+@comments_bp.post("/comments/<int:comment_id>/report")
+def report_comment(comment_id):
+    """Report another user's comment while keeping the reporter private."""
+    user = get_authenticated_user()
+
+    if user is None:
+        return jsonify({"error": "Authentication required."}), 401
+
+    comment = db.session.get(Comment, comment_id)
+
+    if comment is None:
+        return jsonify({"error": "Comment not found."}), 404
+
+    if comment.author_id == user.id:
+        return jsonify({"error": "You cannot report your own comment."}), 400
+
+    data = request.get_json(silent=True) or {}
+    reason = data.get("reason")
+
+    if not isinstance(reason, str) or not reason.strip():
+        return jsonify({"error": "A report reason is required."}), 400
+
+    existing = Report.query.filter_by(
+        reporter_id=user.id,
+        comment_id=comment.id,
+    ).filter(Report.status != "dismissed").first()
+
+    if existing is not None:
+        return jsonify({"message": "You have already reported this comment."}), 200
+
+    db.session.add(
+        Report(
+            reporter_id=user.id,
+            reported_user_id=comment.author_id,
+            comment_id=comment.id,
+            reason=reason.strip()[:80],
+        )
+    )
+    db.session.commit()
+
+    return jsonify({"message": "Report submitted successfully."}), 201
 
 
 @comments_bp.patch("/comments/<int:comment_id>")

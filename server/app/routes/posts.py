@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, session
 
 from app.extensions import db
-from app.models import Bookmark, Like, Post, Repost, User
+from app.models import Bookmark, Like, Post, Report, Repost, User
 from app.schemas.post_schema import (
     post_to_dict,
     validate_post_data,
@@ -148,6 +148,49 @@ def delete_post(post_id):
     db.session.commit()
 
     return jsonify({"message": "Post deleted successfully."}), 200
+
+
+@posts_bp.post("/posts/<int:post_id>/report")
+def report_post(post_id):
+    """Report another user's post while keeping the reporter private."""
+    user = get_authenticated_user()
+
+    if user is None:
+        return jsonify({"error": "Authentication required."}), 401
+
+    post = db.session.get(Post, post_id)
+
+    if post is None:
+        return jsonify({"error": "Post not found."}), 404
+
+    if post.author_id == user.id:
+        return jsonify({"error": "You cannot report your own post."}), 400
+
+    data = request.get_json(silent=True) or {}
+    reason = data.get("reason")
+
+    if not isinstance(reason, str) or not reason.strip():
+        return jsonify({"error": "A report reason is required."}), 400
+
+    existing = Report.query.filter_by(
+        reporter_id=user.id,
+        post_id=post.id,
+    ).filter(Report.status != "dismissed").first()
+
+    if existing is not None:
+        return jsonify({"message": "You have already reported this post."}), 200
+
+    db.session.add(
+        Report(
+            reporter_id=user.id,
+            reported_user_id=post.author_id,
+            post_id=post.id,
+            reason=reason.strip()[:80],
+        )
+    )
+    db.session.commit()
+
+    return jsonify({"message": "Report submitted successfully."}), 201
 
 
 @posts_bp.post("/posts/<int:post_id>/like")

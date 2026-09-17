@@ -29,6 +29,11 @@ class Comment(db.Model):
 
     author = db.relationship("User", back_populates="comments")
     post = db.relationship("Post", back_populates="comments")
+    reports = db.relationship(
+        "Report",
+        back_populates="comment",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<Comment {self.id}>"

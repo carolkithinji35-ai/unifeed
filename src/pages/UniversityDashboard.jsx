@@ -225,6 +225,7 @@ export default function UniversityDashboard() {
 
     const metrics = dashboard?.metrics || {};
     const activity = dashboard?.activity || {};
+    const reports = dashboard?.reports || [];
     const activityRows = [
         ["Posts", metrics.total_posts, FileText],
         ["Comments", metrics.total_comments, UsersRound],
@@ -306,67 +307,58 @@ export default function UniversityDashboard() {
                             <div className="flex items-center justify-between gap-3">
                                 <div>
                                     <h2 className="text-xl font-bold text-white">
-                                        Student directory
+                                        Recent reports
                                     </h2>
                                     <p className="mt-1 text-sm text-slate-500">
-                                        Search by institutional student ID or
-                                        student name.
+                                        Reported content and the account it
+                                        belongs to.
                                     </p>
                                 </div>
-                                <UsersRound className="size-5 text-lime-300" />
+                                <AlertTriangle className="size-5 text-amber-300" />
                             </div>
-                            <form
-                                onSubmit={searchStudents}
-                                className="mt-5 flex gap-2"
-                            >
-                                <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
-                                    <Search className="size-4 text-slate-500" />
-                                    <input
-                                        value={studentSearch}
-                                        onChange={(event) =>
-                                            setStudentSearch(event.target.value)
-                                        }
-                                        placeholder="Search by student ID or name..."
-                                        className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-600"
-                                    />
-                                </label>
-                                <button
-                                    type="submit"
-                                    className="rounded-xl bg-lime-300 px-4 text-sm font-bold text-slate-950"
-                                >
-                                    Search
-                                </button>
-                            </form>
-                            <div className="mt-4 divide-y divide-white/8">
-                                {students.length === 0 ? (
+                            <div className="mt-5 divide-y divide-white/8">
+                                {reports.length === 0 ? (
                                     <p className="py-7 text-sm text-slate-500">
-                                        No student records match this search.
+                                        No reports have been submitted yet.
                                     </p>
                                 ) : (
-                                    students.slice(0, 6).map((student) => (
-                                        <div
-                                            key={student.id}
-                                            className="flex items-center justify-between gap-4 py-3"
-                                        >
-                                            <div className="min-w-0">
-                                                <p className="truncate text-sm font-semibold text-slate-200">
-                                                    {[
-                                                        student.first_name,
-                                                        student.last_name,
-                                                    ]
-                                                        .filter(Boolean)
-                                                        .join(" ") ||
-                                                        student.username}
-                                                </p>
-                                                <p className="mt-1 truncate text-xs text-slate-500">
-                                                    @{student.username} · User
-                                                    ID {student.id}
-                                                </p>
+                                    reports.map((report) => (
+                                        <div key={report.id} className="py-3">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="flex min-w-0 items-center gap-2">
+                                                    <span className="size-2 shrink-0 rounded-full bg-amber-300" />
+                                                    <span className="text-sm font-semibold text-slate-200">
+                                                        {report.reason}
+                                                    </span>
+                                                    <span className="text-xs text-slate-600">
+                                                        {report.content_type}
+                                                    </span>
+                                                </div>
+                                                <span className="shrink-0 rounded-full bg-amber-300/10 px-2 py-1 text-[10px] font-semibold text-amber-200">
+                                                    {report.status.replace(
+                                                        "_",
+                                                        " ",
+                                                    )}
+                                                </span>
                                             </div>
-                                            <span className="shrink-0 text-xs font-semibold text-lime-300">
-                                                {student.student_id ||
-                                                    "ID pending"}
-                                            </span>
+                                            <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-400">
+                                                {report.content}
+                                            </p>
+                                            <p className="mt-2 text-[11px] text-slate-600">
+                                                Account:{" "}
+                                                {report.reported_account
+                                                    .student_id ||
+                                                    "ID pending"}{" "}
+                                                · @
+                                                {
+                                                    report.reported_account
+                                                        .username
+                                                }{" "}
+                                                ·{" "}
+                                                {new Date(
+                                                    report.created_at,
+                                                ).toLocaleString()}
+                                            </p>
                                         </div>
                                     ))
                                 )}

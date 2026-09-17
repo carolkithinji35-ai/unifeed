@@ -1,6 +1,8 @@
 import {
     Bookmark,
+    ChevronDown,
     Edit3,
+    Flag,
     Heart,
     MessageCircle,
     Repeat2,
@@ -9,6 +11,7 @@ import {
     Trash2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import { apiRequest } from "../lib/authApi";
 
@@ -84,6 +87,13 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
     const [editText, setEditText] = useState(post.text || post.content || "");
     const [savingEdit, setSavingEdit] = useState(false);
     const [socialActionLoading, setSocialActionLoading] = useState("");
+    const [reportTarget, setReportTarget] = useState(null);
+    const [reportReason, setReportReason] = useState("spam");
+    const [reportSubmitting, setReportSubmitting] = useState(false);
+    const [reportMenuOpen, setReportMenuOpen] = useState(false);
+    const [reportSuccess, setReportSuccess] = useState(false);
+    const [reportedPost, setReportedPost] = useState(false);
+    const [reportedComments, setReportedComments] = useState(() => new Set());
 
     useEffect(() => {
         const updateRelativeTime = () => {
@@ -127,6 +137,68 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
             setCommentError(error.message || "Unable to update this post.");
         } finally {
             setSavingEdit(false);
+        }
+    };
+
+    const openReportModal = (target) => {
+        if (!currentUser) {
+            navigate("/signin");
+            return;
+        }
+
+        setReportReason("spam");
+        setReportTarget(target);
+        setReportMenuOpen(false);
+        setReportSuccess(false);
+        setCommentError("");
+    };
+
+    const closeReportModal = () => {
+        if (reportSubmitting) return;
+        setReportTarget(null);
+        setReportReason("spam");
+        setReportMenuOpen(false);
+        setReportSuccess(false);
+    };
+
+    const submitReport = async (event) => {
+        event.preventDefault();
+        if (!reportTarget || !reportReason) return;
+
+        setReportSubmitting(true);
+        setCommentError("");
+
+        const endpoint =
+            reportTarget.type === "post"
+                ? `/api/posts/${reportTarget.id}/report`
+                : `/api/comments/${reportTarget.id}/report`;
+
+        try {
+            await apiRequest(endpoint, {
+                method: "POST",
+                body: JSON.stringify({ reason: reportReason }),
+            });
+            if (reportTarget.type === "post") {
+                setReportedPost(true);
+            } else {
+                setReportedComments(
+                    (current) => new Set([...current, reportTarget.id]),
+                );
+            }
+            setReportSuccess(true);
+            setReportMenuOpen(false);
+            setCommentError("");
+
+            window.setTimeout(() => {
+                setReportTarget(null);
+                setReportReason("spam");
+                setReportMenuOpen(false);
+                setReportSuccess(false);
+            }, 1500);
+        } catch (error) {
+            setCommentError(error.message || "Unable to submit this report.");
+        } finally {
+            setReportSubmitting(false);
         }
     };
 
@@ -397,6 +469,34 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
                         </div>
 
                         <div className="flex items-center gap-1">
+                            {currentUser?.id !== post.author_id && (
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        openReportModal({
+                                            type: "post",
+                                            id: post.id,
+                                        })
+                                    }
+                                    className={`rounded-lg p-1 transition hover:bg-lime-300/10 ${
+                                        reportedPost
+                                            ? "text-lime-300"
+                                            : "text-slate-600 hover:text-lime-300"
+                                    }`}
+                                    aria-label="Report this post"
+                                    title="Report post"
+                                >
+                                    <Flag
+                                        className="size-4"
+                                        fill={
+                                            reportedPost
+                                                ? "currentColor"
+                                                : "none"
+                                        }
+                                    />
+                                </button>
+                            )}
+
                             {currentUser?.id === post.author_id && (
                                 <>
                                     <button
@@ -640,6 +740,39 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
                                             {comment.content}
                                         </p>
 
+                                        {currentUser?.id !==
+                                            comment.author_id && (
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    openReportModal({
+                                                        type: "comment",
+                                                        id: comment.id,
+                                                    })
+                                                }
+                                                className={`shrink-0 transition hover:text-lime-300 ${
+                                                    reportedComments.has(
+                                                        comment.id,
+                                                    )
+                                                        ? "text-lime-300"
+                                                        : "text-slate-600"
+                                                }`}
+                                                aria-label="Report this comment"
+                                                title="Report comment"
+                                            >
+                                                <Flag
+                                                    className="size-3.5"
+                                                    fill={
+                                                        reportedComments.has(
+                                                            comment.id,
+                                                        )
+                                                            ? "currentColor"
+                                                            : "none"
+                                                    }
+                                                />
+                                            </button>
+                                        )}
+
                                         {currentUser?.id ===
                                             comment.author_id && (
                                             <button
@@ -686,6 +819,190 @@ function CampusPostCard({ post, currentUser, onDeleted, onUpdated }) {
                     )}
                 </div>
             </div>
+
+            {reportTarget &&
+                createPortal(
+                    <div
+                        className="fixed inset-0 z-[9999] grid place-items-center bg-slate-950/75 px-4 backdrop-blur-sm"
+                        role="presentation"
+                        onMouseDown={(event) => {
+                            if (event.target === event.currentTarget) {
+                                closeReportModal();
+                            }
+                        }}
+                    >
+                        <form
+                            onSubmit={submitReport}
+                            className="relative z-[10000] min-h-[280px] w-full max-w-md rounded-2xl border border-white/10 p-5 text-white shadow-2xl"
+                            style={{ backgroundColor: "#11161d" }}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="report-dialog-title"
+                        >
+                            {reportSuccess ? (
+                                <div className="py-8 text-center">
+                                    <div className="mx-auto grid size-14 place-items-center rounded-full bg-lime-300/15 text-2xl text-lime-300">
+                                        ✓
+                                    </div>
+                                    <h2 className="mt-4 text-lg font-semibold text-white">
+                                        Report submitted
+                                    </h2>
+                                    <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-400">
+                                        Thanks for helping keep UniFeed safe.
+                                        The report has been sent for review.
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={closeReportModal}
+                                        className="mt-6 rounded-xl bg-lime-300 px-5 py-2.5 text-sm font-bold text-slate-950 hover:bg-lime-200"
+                                    >
+                                        Done
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div>
+                                            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-lime-300">
+                                                Community safety
+                                            </p>
+                                            <h2
+                                                id="report-dialog-title"
+                                                className="mt-1 text-lg font-semibold text-white"
+                                            >
+                                                Report this {reportTarget.type}
+                                            </h2>
+                                            <p className="mt-1 text-sm leading-6 text-slate-400">
+                                                Choose the reason that best
+                                                describes the issue. Your
+                                                identity will not be shown in
+                                                the university dashboard.
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={closeReportModal}
+                                            className="rounded-lg px-2 py-1 text-xl leading-none text-slate-500 hover:bg-white/5 hover:text-white"
+                                            aria-label="Close report dialog"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+
+                                    <label className="mt-5 block text-xs font-semibold text-slate-300">
+                                        Reason
+                                        <div className="relative mt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setReportMenuOpen(
+                                                        (isOpen) => !isOpen,
+                                                    )
+                                                }
+                                                className="flex w-full items-center justify-between rounded-xl border border-lime-300/25 bg-[#11161d] px-3 py-2.5 text-left text-sm text-white outline-none transition hover:border-lime-300 focus:border-lime-300 focus:ring-2 focus:ring-lime-300/20"
+                                                aria-haspopup="listbox"
+                                                aria-expanded={reportMenuOpen}
+                                            >
+                                                <span>
+                                                    {reportReason ===
+                                                    "explicit content"
+                                                        ? "Explicit content"
+                                                        : reportReason ===
+                                                            "harmful content"
+                                                          ? "Harmful content"
+                                                          : reportReason
+                                                                .charAt(0)
+                                                                .toUpperCase() +
+                                                            reportReason.slice(
+                                                                1,
+                                                            )}
+                                                </span>
+                                                <ChevronDown
+                                                    className={`size-4 text-lime-300 transition-transform ${reportMenuOpen ? "rotate-180" : ""}`}
+                                                />
+                                            </button>
+
+                                            {reportMenuOpen && (
+                                                <div
+                                                    className="absolute left-0 right-0 top-full z-[10001] mt-2 overflow-hidden rounded-xl border border-lime-300/25 bg-[#11161d] p-1 shadow-2xl"
+                                                    role="listbox"
+                                                >
+                                                    {[
+                                                        "spam",
+                                                        "harassment",
+                                                        "explicit content",
+                                                        "harmful content",
+                                                        "other",
+                                                    ].map((reason) => {
+                                                        const label =
+                                                            reason ===
+                                                            "explicit content"
+                                                                ? "Explicit content"
+                                                                : reason ===
+                                                                    "harmful content"
+                                                                  ? "Harmful content"
+                                                                  : reason
+                                                                        .charAt(
+                                                                            0,
+                                                                        )
+                                                                        .toUpperCase() +
+                                                                    reason.slice(
+                                                                        1,
+                                                                    );
+
+                                                        return (
+                                                            <button
+                                                                key={reason}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setReportReason(
+                                                                        reason,
+                                                                    );
+                                                                    setReportMenuOpen(
+                                                                        false,
+                                                                    );
+                                                                }}
+                                                                className="block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-300 transition hover:bg-lime-300 hover:text-slate-950"
+                                                                role="option"
+                                                                aria-selected={
+                                                                    reportReason ===
+                                                                    reason
+                                                                }
+                                                            >
+                                                                {label}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </label>
+
+                                    <div className="mt-5 flex justify-end gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={closeReportModal}
+                                            disabled={reportSubmitting}
+                                            className="rounded-xl border border-white/10 px-4 py-2 text-sm font-semibold text-slate-400 hover:text-white disabled:opacity-50"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={reportSubmitting}
+                                            className="rounded-xl bg-lime-300 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-lime-200 disabled:opacity-60"
+                                        >
+                                            {reportSubmitting
+                                                ? "Submitting..."
+                                                : "Submit report"}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </form>
+                    </div>,
+                    document.body,
+                )}
         </article>
     );
 }
