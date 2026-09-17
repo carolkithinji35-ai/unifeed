@@ -35,10 +35,22 @@ export function loginUser({ identifier, email, password }) {
     });
 }
 
-export function registerUser({ username, email, password }) {
+export function registerUser({
+    firstName,
+    lastName,
+    username,
+    email,
+    password,
+}) {
     return apiRequest("/api/auth/register", {
         method: "POST",
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({
+            first_name: firstName,
+            last_name: lastName,
+            username,
+            email,
+            password,
+        }),
     });
 }
 
