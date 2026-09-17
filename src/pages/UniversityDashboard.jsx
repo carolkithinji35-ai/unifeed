@@ -54,7 +54,7 @@ function Metric({ icon: Icon, label, value, tone = "lime", note }) {
     );
 }
 
-function AdminSidebar({ onLogout }) {
+function AdminSidebar({ activeSection, onSectionChange, onLogout }) {
     const items = [
         ["Overview", LayoutDashboard],
         ["Reports", AlertTriangle],
@@ -75,8 +75,9 @@ function AdminSidebar({ onLogout }) {
                     <button
                         key={label}
                         type="button"
+                        onClick={() => onSectionChange(label.toLowerCase())}
                         className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-semibold ${
-                            index === 0
+                            activeSection === label.toLowerCase()
                                 ? "border-l-2 border-lime-300 bg-lime-300/10 text-white"
                                 : "text-slate-400 hover:bg-white/[0.04] hover:text-white"
                         }`}
@@ -120,6 +121,7 @@ export default function UniversityDashboard() {
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [lastUpdated, setLastUpdated] = useState(null);
+    const [activeSection, setActiveSection] = useState("overview");
 
     useEffect(() => {
         if (loading || !user || user.role !== "university_admin") {
@@ -236,7 +238,11 @@ export default function UniversityDashboard() {
 
     return (
         <div className="min-h-screen bg-[#0b1117] text-slate-100 lg:flex">
-            <AdminSidebar onLogout={handleLogout} />
+            <AdminSidebar
+                activeSection={activeSection}
+                onSectionChange={setActiveSection}
+                onLogout={handleLogout}
+            />
             <main className="min-w-0 flex-1">
                 <div className="mx-auto max-w-[1480px] px-4 py-6 sm:px-6 lg:px-9 lg:py-8">
                     <header className="flex flex-col justify-between gap-5 border-b border-white/8 pb-7 sm:flex-row sm:items-end">
@@ -272,7 +278,9 @@ export default function UniversityDashboard() {
                         </div>
                     )}
 
-                    <section className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <section
+                        className={`mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4 ${activeSection !== "overview" ? "hidden" : ""}`}
+                    >
                         <Metric
                             icon={UsersRound}
                             label="Registered students"
@@ -300,7 +308,9 @@ export default function UniversityDashboard() {
                         />
                     </section>
 
-                    <section className="mt-6 grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+                    <section
+                        className={`mt-6 grid gap-6 xl:grid-cols-[1.25fr_0.75fr] ${activeSection !== "overview" ? "hidden" : ""}`}
+                    >
                         <div className="rounded-2xl border border-white/10 bg-[#111820] p-5 sm:p-6">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
@@ -407,7 +417,9 @@ export default function UniversityDashboard() {
                         </div>
                     </section>
 
-                    <section className="mt-6 rounded-2xl border border-white/10 bg-[#111820] p-5 sm:p-6">
+                    <section
+                        className={`mt-6 rounded-2xl border border-white/10 bg-[#111820] p-5 sm:p-6 ${activeSection !== "overview" ? "hidden" : ""}`}
+                    >
                         <div className="flex items-center gap-3">
                             <ShieldCheck className="size-6 text-lime-300" />
                             <div>
@@ -449,6 +461,217 @@ export default function UniversityDashboard() {
                                     </p>
                                 </div>
                             ))}
+                        </div>
+                    </section>
+
+                    <section
+                        className={
+                            activeSection === "reports"
+                                ? "mt-6 rounded-2xl border border-white/10 bg-[#111820] p-5 sm:p-6"
+                                : "hidden"
+                        }
+                    >
+                        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+                            <div>
+                                <h2 className="text-xl font-bold text-white">
+                                    All reports
+                                </h2>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    Review reported posts and comments using
+                                    live UniFeed data.
+                                </p>
+                            </div>
+                            <span className="text-xs text-slate-500">
+                                {reports.length.toLocaleString()} reports loaded
+                            </span>
+                        </div>
+
+                        <div className="mt-6 overflow-x-auto">
+                            <table className="w-full min-w-[900px] text-left text-sm">
+                                <thead className="border-b border-white/10 text-xs uppercase tracking-[0.16em] text-slate-600">
+                                    <tr>
+                                        <th className="px-3 py-3 font-semibold">
+                                            Reason
+                                        </th>
+                                        <th className="px-3 py-3 font-semibold">
+                                            Content
+                                        </th>
+                                        <th className="px-3 py-3 font-semibold">
+                                            Reported account
+                                        </th>
+                                        <th className="px-3 py-3 font-semibold">
+                                            Status
+                                        </th>
+                                        <th className="px-3 py-3 font-semibold">
+                                            Date
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/8">
+                                    {reports.length === 0 ? (
+                                        <tr>
+                                            <td
+                                                colSpan="5"
+                                                className="px-3 py-10 text-center text-slate-500"
+                                            >
+                                                No reports have been submitted
+                                                yet.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        reports.map((report) => (
+                                            <tr
+                                                key={report.id}
+                                                className="align-top hover:bg-white/[0.025]"
+                                            >
+                                                <td className="px-3 py-4 font-semibold text-slate-200">
+                                                    {report.reason}
+                                                </td>
+                                                <td className="max-w-[320px] px-3 py-4">
+                                                    <span className="text-xs uppercase tracking-wide text-slate-600">
+                                                        {report.content_type}
+                                                    </span>
+                                                    <p className="mt-1 line-clamp-3 text-slate-400">
+                                                        {report.content}
+                                                    </p>
+                                                </td>
+                                                <td className="px-3 py-4">
+                                                    <p className="font-semibold text-white">
+                                                        @
+                                                        {report.reported_account
+                                                            ?.username ||
+                                                            "Unknown"}
+                                                    </p>
+                                                    <p className="mt-1 font-mono text-xs text-lime-300">
+                                                        {report.reported_account
+                                                            ?.student_id ||
+                                                            "ID pending"}
+                                                    </p>
+                                                </td>
+                                                <td className="px-3 py-4">
+                                                    <span className="rounded-full bg-amber-300/10 px-2 py-1 text-xs font-semibold capitalize text-amber-200">
+                                                        {String(
+                                                            report.status ||
+                                                                "pending",
+                                                        ).replace("_", " ")}
+                                                    </span>
+                                                </td>
+                                                <td className="whitespace-nowrap px-3 py-4 text-xs text-slate-500">
+                                                    {new Date(
+                                                        report.created_at,
+                                                    ).toLocaleString()}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section
+                        className={
+                            activeSection === "students"
+                                ? "mt-6 rounded-2xl border border-white/10 bg-[#111820] p-5 sm:p-6"
+                                : "hidden"
+                        }
+                    >
+                        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                            <div>
+                                <h2 className="text-xl font-bold text-white">
+                                    All UniFeed students
+                                </h2>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    Search by institutional student ID or
+                                    student name.
+                                </p>
+                            </div>
+                            <span className="text-xs text-slate-500">
+                                {students.length.toLocaleString()} records shown
+                            </span>
+                        </div>
+
+                        <form
+                            onSubmit={searchStudents}
+                            className="mt-5 flex flex-col gap-3 sm:flex-row"
+                        >
+                            <label className="relative min-w-0 flex-1">
+                                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+                                <input
+                                    value={studentSearch}
+                                    onChange={(event) =>
+                                        setStudentSearch(event.target.value)
+                                    }
+                                    placeholder="Search by student ID or name..."
+                                    className="w-full rounded-xl border border-white/10 bg-[#0b1117] py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-slate-600 focus:border-lime-300/60"
+                                />
+                            </label>
+                            <button
+                                type="submit"
+                                className="rounded-xl bg-lime-300 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-lime-200"
+                            >
+                                Search
+                            </button>
+                        </form>
+
+                        <div className="mt-6 overflow-x-auto">
+                            <table className="w-full min-w-[680px] text-left text-sm">
+                                <thead className="border-b border-white/10 text-xs uppercase tracking-[0.16em] text-slate-600">
+                                    <tr>
+                                        <th className="px-3 py-3 font-semibold">
+                                            Student
+                                        </th>
+                                        <th className="px-3 py-3 font-semibold">
+                                            Institutional ID
+                                        </th>
+                                        <th className="px-3 py-3 font-semibold">
+                                            Username
+                                        </th>
+                                        <th className="px-3 py-3 font-semibold">
+                                            Email
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/8">
+                                    {students.length === 0 ? (
+                                        <tr>
+                                            <td
+                                                colSpan="4"
+                                                className="px-3 py-8 text-center text-slate-500"
+                                            >
+                                                No student records found.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        students.map((student) => (
+                                            <tr
+                                                key={student.id}
+                                                className="hover:bg-white/[0.025]"
+                                            >
+                                                <td className="px-3 py-4 font-semibold text-white">
+                                                    {[
+                                                        student.first_name,
+                                                        student.last_name,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(" ") ||
+                                                        "Unnamed student"}
+                                                </td>
+                                                <td className="px-3 py-4 font-mono text-lime-300">
+                                                    {student.student_id ||
+                                                        "ID pending"}
+                                                </td>
+                                                <td className="px-3 py-4 text-slate-300">
+                                                    @{student.username}
+                                                </td>
+                                                <td className="px-3 py-4 text-slate-400">
+                                                    {student.email}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     </section>
                 </div>
