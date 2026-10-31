@@ -133,11 +133,11 @@ function EventList() {
                                 {event.title}
                             </h2>
 
-                            <p className="mt-1 break-words text-sm text-lime-300/80">
+                            <p className="mt-1 wrap-break-word text-sm text-lime-300/80">
                                 {event.meta}
                             </p>
 
-                            <p className="mt-2 break-words text-sm leading-6 text-slate-500">
+                            <p className="mt-2 wrap-break-word text-sm leading-6 text-slate-500">
                                 {event.detail}
                             </p>
                         </div>

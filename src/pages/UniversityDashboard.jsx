@@ -1,3 +1,4 @@
+// Full UniFeed university administration dashboard
 import {
     AlertTriangle,
     BarChart3,
@@ -71,7 +72,7 @@ function AdminSidebar({ activeSection, onSectionChange, onLogout }) {
                 className="space-y-1 px-3 py-5"
                 aria-label="University administration"
             >
-                {items.map(([label, Icon], index) => (
+                {items.map(([label, Icon]) => (
                     <button
                         key={label}
                         type="button"
@@ -244,7 +245,7 @@ export default function UniversityDashboard() {
                 onLogout={handleLogout}
             />
             <main className="min-w-0 flex-1">
-                <div className="mx-auto max-w-[1480px] px-4 py-6 sm:px-6 lg:px-9 lg:py-8">
+                <div className="mx-auto max-w-370 px-4 py-6 sm:px-6 lg:px-9 lg:py-8">
                     <header className="flex flex-col justify-between gap-5 border-b border-white/8 pb-7 sm:flex-row sm:items-end">
                         <div>
                             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-lime-300">
@@ -487,7 +488,7 @@ export default function UniversityDashboard() {
                         </div>
 
                         <div className="mt-6 overflow-x-auto">
-                            <table className="w-full min-w-[900px] text-left text-sm">
+                            <table className="w-full min-w-225 text-left text-sm">
                                 <thead className="border-b border-white/10 text-xs uppercase tracking-[0.16em] text-slate-600">
                                     <tr>
                                         <th className="px-3 py-3 font-semibold">
@@ -522,12 +523,12 @@ export default function UniversityDashboard() {
                                         reports.map((report) => (
                                             <tr
                                                 key={report.id}
-                                                className="align-top hover:bg-white/[0.025]"
+                                                className="align-top hover:bg-white/2.5"
                                             >
                                                 <td className="px-3 py-4 font-semibold text-slate-200">
                                                     {report.reason}
                                                 </td>
-                                                <td className="max-w-[320px] px-3 py-4">
+                                                <td className="max-w-80 px-3 py-4">
                                                     <span className="text-xs uppercase tracking-wide text-slate-600">
                                                         {report.content_type}
                                                     </span>
@@ -615,7 +616,7 @@ export default function UniversityDashboard() {
                         </form>
 
                         <div className="mt-6 overflow-x-auto">
-                            <table className="w-full min-w-[680px] text-left text-sm">
+                            <table className="w-full min-w-170 text-left text-sm">
                                 <thead className="border-b border-white/10 text-xs uppercase tracking-[0.16em] text-slate-600">
                                     <tr>
                                         <th className="px-3 py-3 font-semibold">
@@ -646,7 +647,7 @@ export default function UniversityDashboard() {
                                         students.map((student) => (
                                             <tr
                                                 key={student.id}
-                                                className="hover:bg-white/[0.025]"
+                                                className="hover:bg-white/2.5"
                                             >
                                                 <td className="px-3 py-4 font-semibold text-white">
                                                     {[
@@ -678,4 +679,5 @@ export default function UniversityDashboard() {
             </main>
         </div>
     );
-}
+}                                                                                                                                                                                                                                                                                                                                                      
+                                                                                                                                                                                                                                                                                                             

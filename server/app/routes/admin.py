@@ -70,7 +70,7 @@ def dashboard_access():
 
 @admin_bp.get("/admin/summary")
 def dashboard_summary():
-    """Return real, privacy-safe aggregate data for university administrators."""
+    """Return privacy-safe aggregate data for university administrators."""
     _, error_response = require_university_admin()
     if error_response:
         return error_response
